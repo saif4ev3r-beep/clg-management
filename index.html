@@ -1,0 +1,843 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>StudentHub - Student Management</title>
+
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body>
+
+<!-- ================= LOGIN ================= -->
+
+<div id="loginPage" class="login-page">
+
+    <div class="login-card">
+
+        <div class="brand">
+            <div class="logo">🎓</div>
+
+            <div>
+                <h2>Student<span>Hub</span></h2>
+                <small>STUDENT MANAGEMENT SYSTEM</small>
+            </div>
+        </div>
+
+
+        <!-- LOGIN / CREATE BUTTONS -->
+
+        <div class="auth-tabs">
+
+            <button id="showLogin" class="auth-tab active">
+                LOGIN
+            </button>
+
+            <button id="showCreate" class="auth-tab">
+                CREATE ACCOUNT
+            </button>
+
+        </div>
+
+
+        <!-- LOGIN -->
+
+        <div id="loginSection">
+
+            <h1>Sign in to continue</h1>
+
+            <p class="login-sub">
+                Manage student records from one place.
+            </p>
+
+            <form id="loginForm">
+
+                <label>User ID / Email</label>
+
+                <input
+                    id="userId"
+                    type="text"
+                    placeholder="Enter User ID or Email"
+                    required
+                >
+
+
+                <label>Password</label>
+
+                <div class="password-box">
+
+                    <input
+                        id="password"
+                        type="password"
+                        placeholder="Enter your password"
+                        required
+                    >
+
+                    <button
+                        type="button"
+                        id="togglePassword"
+                    >👁</button>
+
+                </div>
+
+
+                <select id="role">
+                    <option>Student</option>
+                    <option>Admin</option>
+                    <option>Teacher</option>
+                </select>
+
+
+                <p id="loginError" class="error"></p>
+
+
+                <button
+                    type="submit"
+                    class="main-btn"
+                >
+                    Login to Portal
+                </button>
+
+            </form>
+
+        </div>
+
+
+        <!-- CREATE ACCOUNT -->
+
+        <div
+            id="createSection"
+            style="display:none;"
+        >
+
+            <h1>Create Account</h1>
+
+            <p class="login-sub">
+                Create your StudentHub account.
+            </p>
+
+
+            <form id="createAccountForm">
+
+                <label>Full Name</label>
+
+                <input
+                    id="createName"
+                    type="text"
+                    placeholder="Enter your name"
+                    required
+                >
+
+
+                <label>Email Address</label>
+
+                <input
+                    id="createEmail"
+                    type="email"
+                    placeholder="Enter your email"
+                    required
+                >
+
+
+                <label>Password</label>
+
+                <input
+                    id="createPassword"
+                    type="password"
+                    placeholder="Create password"
+                    required
+                >
+
+
+                <p id="createError" class="error"></p>
+
+
+                <button
+                    type="submit"
+                    class="main-btn"
+                >
+                    Create Account
+                </button>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- ================= APP ================= -->
+
+<div id="app" class="app hidden">
+
+
+    <!-- OVERLAY -->
+
+    <div id="overlay" class="overlay"></div>
+
+
+    <!-- SIDEBAR -->
+
+    <aside id="sidebar" class="sidebar">
+
+        <div class="sidebar-logo">
+
+            <div class="side-logo-icon">
+                🎓
+            </div>
+
+            <div>
+                <b>StudentHub</b>
+                <small>Portal</small>
+            </div>
+
+        </div>
+
+
+        <nav>
+
+            <button
+                class="nav-item active"
+                data-page="dashboard"
+            >
+                🏠
+                <span>Overview</span>
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-page="profile"
+            >
+                👤
+                <span>Profile</span>
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-page="courses"
+            >
+                📚
+                <span>Courses</span>
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-page="attendance"
+            >
+                📅
+                <span>Attendance</span>
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-page="fees"
+            >
+                💳
+                <span>Fees</span>
+            </button>
+
+
+            <button
+                class="nav-item"
+                data-page="notices"
+            >
+                🔔
+                <span>Notices</span>
+            </button>
+
+        </nav>
+
+
+        <button id="logout" class="logout">
+            🚪 Logout
+        </button>
+
+    </aside>
+
+
+    <!-- MAIN -->
+
+    <main class="main">
+
+
+        <!-- TOP BAR -->
+
+        <header class="topbar">
+
+            <button
+                id="menuBtn"
+                class="menu-btn"
+                aria-label="Menu"
+            >
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+
+
+            <div>
+
+                <h2 id="pageTitle">
+                    Dashboard
+                </h2>
+
+                <p id="pageSubtitle">
+                    Manage your students easily.
+                </p>
+
+            </div>
+
+        </header>
+
+
+        <!-- ================= DASHBOARD ================= -->
+
+        <section
+            id="dashboard"
+            class="page active"
+        >
+
+
+            <!-- HERO -->
+
+            <div class="hero">
+
+                <div class="hero-content">
+
+                    <small>
+                        • STUDENT MANAGEMENT
+                    </small>
+
+                    <h1>
+                        Manage students
+                        <br>
+                        <span>smarter & faster.</span>
+                    </h1>
+
+                    <p>
+                        Add, edit, search and manage student
+                        academic records from one powerful dashboard.
+                    </p>
+
+
+                    <button
+                        class="hero-btn"
+                        data-page="add"
+                    >
+                        + Add New Student →
+                    </button>
+
+                </div>
+
+            </div>
+
+
+            <!-- STATS -->
+
+            <div class="stats-grid">
+
+
+                <div class="stat-card blue">
+
+                    <div class="stat-icon">
+                        👨‍🎓
+                    </div>
+
+                    <div>
+                        <small>TOTAL STUDENTS</small>
+
+                        <strong id="totalCount">
+                            0
+                        </strong>
+
+                        <p>Registered students</p>
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card green">
+
+                    <div class="stat-icon">
+                        ✓
+                    </div>
+
+                    <div>
+                        <small>PASSED</small>
+
+                        <strong id="passedCount">
+                            0
+                        </strong>
+
+                        <p>Successful students</p>
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card red">
+
+                    <div class="stat-icon">
+                        ×
+                    </div>
+
+                    <div>
+                        <small>FAILED</small>
+
+                        <strong id="failedCount">
+                            0
+                        </strong>
+
+                        <p>Needs improvement</p>
+                    </div>
+
+                </div>
+
+
+                <div class="stat-card purple">
+
+                    <div class="stat-icon">
+                        📚
+                    </div>
+
+                    <div>
+                        <small>COURSES</small>
+
+                        <strong id="courseCount">
+                            0
+                        </strong>
+
+                        <p>Active courses</p>
+                    </div>
+
+                </div>
+
+            </div>
+
+
+            <!-- QUICK ACCESS -->
+
+            <div class="box">
+
+                <h2>Quick Access</h2>
+
+                <p>
+                    Jump directly to important sections.
+                </p>
+
+
+                <div class="quick-grid">
+
+
+                    <button
+                        class="quick-card"
+                        data-page="add"
+                    >
+
+                        <div class="quick-icon">
+                            👨‍🎓
+                        </div>
+
+                        <div>
+                            <b>Add Student</b>
+                            <small>Create new record</small>
+                        </div>
+
+                        <span>→</span>
+
+                    </button>
+
+
+                    <button
+                        class="quick-card"
+                        data-page="records"
+                    >
+
+                        <div class="quick-icon">
+                            📋
+                        </div>
+
+                        <div>
+                            <b>Student Records</b>
+                            <small>View all students</small>
+                        </div>
+
+                        <span>→</span>
+
+                    </button>
+
+
+                    <button
+                        class="quick-card"
+                        data-page="statistics"
+                    >
+
+                        <div class="quick-icon">
+                            📊
+                        </div>
+
+                        <div>
+                            <b>Statistics</b>
+                            <small>View performance</small>
+                        </div>
+
+                        <span>→</span>
+
+                    </button>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= ADD ================= -->
+
+        <section
+            id="add"
+            class="page"
+        >
+
+            <div class="box">
+
+                <h2>Add New Student</h2>
+
+                <p>
+                    Create a new student record.
+                </p>
+
+
+                <form
+                    id="studentForm"
+                    class="student-form"
+                >
+
+                    <div class="form-grid">
+
+                        <div>
+                            <label>Student Name</label>
+
+                            <input
+                                id="studentName"
+                                required
+                                placeholder="Enter name"
+                            >
+                        </div>
+
+
+                        <div>
+                            <label>Student ID</label>
+
+                            <input
+                                id="studentId"
+                                required
+                                placeholder="Enter ID"
+                            >
+                        </div>
+
+
+                        <div>
+                            <label>Email</label>
+
+                            <input
+                                id="studentEmail"
+                                type="email"
+                                placeholder="Enter email"
+                            >
+                        </div>
+
+
+                        <div>
+                            <label>Phone</label>
+
+                            <input
+                                id="studentPhone"
+                                placeholder="Enter phone"
+                            >
+                        </div>
+
+
+                        <div>
+                            <label>Course</label>
+
+                            <select id="studentCourse">
+
+                                <option>B.Tech Computer Science</option>
+                                <option>BCA</option>
+                                <option>BBA</option>
+                                <option>Diploma CSE</option>
+                                <option>B.Com</option>
+                                <option>Other</option>
+
+                            </select>
+
+                        </div>
+
+
+                        <div>
+                            <label>Result</label>
+
+                            <select id="studentResult">
+
+                                <option>Passed</option>
+                                <option>Failed</option>
+
+                            </select>
+
+                        </div>
+
+                    </div>
+
+
+                    <button
+                        class="main-btn"
+                        type="submit"
+                    >
+                        + Add Student
+                    </button>
+
+                </form>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= RECORDS ================= -->
+
+        <section
+            id="records"
+            class="page"
+        >
+
+            <div class="box">
+
+                <div class="section-head">
+
+                    <div>
+                        <h2>Student Records</h2>
+
+                        <p>
+                            View and manage all students.
+                        </p>
+                    </div>
+
+
+                    <input
+                        id="searchInput"
+                        class="search"
+                        placeholder="🔎 Search students..."
+                    >
+
+                </div>
+
+
+                <div class="table-wrap">
+
+                    <table>
+
+                        <thead>
+
+                            <tr>
+                                <th>#</th>
+                                <th>Student</th>
+                                <th>ID</th>
+                                <th>Course</th>
+                                <th>Result</th>
+                                <th>Action</th>
+                            </tr>
+
+                        </thead>
+
+                        <tbody id="studentTable">
+                        </tbody>
+
+                    </table>
+
+                </div>
+
+
+                <div
+                    id="emptyRecords"
+                    class="empty"
+                >
+                    No student records found.
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= COURSES ================= -->
+
+        <section
+            id="courses"
+            class="page"
+        >
+
+            <div class="box">
+
+                <h2>Courses</h2>
+
+                <p>
+                    Active academic programs.
+                </p>
+
+
+                <div
+                    id="courseGrid"
+                    class="course-grid"
+                >
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= STATISTICS ================= -->
+
+        <section
+            id="statistics"
+            class="page"
+        >
+
+            <div class="box">
+
+                <h2>Statistics</h2>
+
+                <p>
+                    Student performance overview.
+                </p>
+
+
+                <div class="statistics">
+
+
+                    <div class="stat-row">
+
+                        <div>
+                            <b>Passed</b>
+
+                            <span id="passedPercent">
+                                0%
+                            </span>
+                        </div>
+
+                        <div class="progress">
+                            <div
+                                id="passedBar"
+                                class="progress-fill passed"
+                            ></div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="stat-row">
+
+                        <div>
+                            <b>Failed</b>
+
+                            <span id="failedPercent">
+                                0%
+                            </span>
+                        </div>
+
+                        <div class="progress">
+                            <div
+                                id="failedBar"
+                                class="progress-fill failed"
+                            ></div>
+                        </div>
+
+                    </div>
+
+
+                    <div class="mini-stats">
+
+                        <div>
+                            <small>Total</small>
+                            <strong id="statTotal">0</strong>
+                        </div>
+
+                        <div>
+                            <small>Passed</small>
+                            <strong id="statPassed">0</strong>
+                        </div>
+
+                        <div>
+                            <small>Failed</small>
+                            <strong id="statFailed">0</strong>
+                        </div>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </section>
+
+
+        <!-- ================= OTHER PAGES ================= -->
+
+        <section id="profile" class="page">
+
+            <div class="box placeholder">
+                <h2>Profile</h2>
+                <p>Student profile section.</p>
+            </div>
+
+        </section>
+
+
+        <section id="attendance" class="page">
+
+            <div class="box placeholder">
+                <h2>Attendance</h2>
+                <p>Attendance section.</p>
+            </div>
+
+        </section>
+
+
+        <section id="fees" class="page">
+
+            <div class="box placeholder">
+                <h2>Fees</h2>
+                <p>Fees management section.</p>
+            </div>
+
+        </section>
+
+
+        <section id="notices" class="page">
+
+            <div class="box placeholder">
+                <h2>Notices</h2>
+                <p>Important notices will appear here.</p>
+            </div>
+
+        </section>
+
+
+    </main>
+
+</div>
+
+
+<script src="script.js"></script>
+
+</body>
+</html>
