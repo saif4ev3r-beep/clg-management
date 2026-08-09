@@ -628,7 +628,13 @@ $("studentForm").addEventListener(
 
 
         students.push(student);
-
+db.collection("students").add(student)
+  .then(() => {
+    console.log("Student saved to Firebase");
+  })
+  .catch((error) => {
+    console.error("Firebase error:", error);
+  });
         saveStudents();
 
 
