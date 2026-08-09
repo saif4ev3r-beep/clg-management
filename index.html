@@ -793,42 +793,93 @@
         <!-- ================= OTHER PAGES ================= -->
 
         <section id="profile" class="page">
-
-            <div class="box placeholder">
-                <h2>Profile</h2>
-                <p>Student profile section.</p>
+            <div class="box profile-card">
+                <div class="profile-avatar">👤</div>
+                <h2>Student Profile</h2>
+                <p>Manage your basic StudentHub profile information.</p>
+                <div class="profile-info-grid">
+                    <div><small>Name</small><strong>Student User</strong></div>
+                    <div><small>Role</small><strong>Student</strong></div>
+                    <div><small>Department</small><strong>Computer Science</strong></div>
+                    <div><small>Session</small><strong>2026 - 2027</strong></div>
+                </div>
             </div>
-
         </section>
 
 
         <section id="attendance" class="page">
-
-            <div class="box placeholder">
-                <h2>Attendance</h2>
-                <p>Attendance section.</p>
+            <div class="box">
+                <div class="section-head">
+                    <div>
+                        <h2>Attendance</h2>
+                        <p>Sample attendance records for the current semester.</p>
+                    </div>
+                    <span class="status-chip good">Good Standing</span>
+                </div>
+                <div class="attendance-summary">
+                    <div class="attendance-circle">
+                        <strong>82%</strong><span>Overall</span>
+                    </div>
+                    <div class="attendance-metrics">
+                        <div><small>Total Classes</small><strong>50</strong></div>
+                        <div><small>Present</small><strong>41</strong></div>
+                        <div><small>Absent</small><strong>9</strong></div>
+                    </div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Subject</th><th>Total</th><th>Present</th><th>Attendance</th></tr></thead>
+                        <tbody>
+                            <tr><td><b>Web Development</b></td><td>12</td><td>10</td><td><span class="badge pass">83%</span></td></tr>
+                            <tr><td><b>Database Management</b></td><td>13</td><td>11</td><td><span class="badge pass">85%</span></td></tr>
+                            <tr><td><b>Computer Networks</b></td><td>10</td><td>8</td><td><span class="badge pass">80%</span></td></tr>
+                            <tr><td><b>Software Engineering</b></td><td>15</td><td>12</td><td><span class="badge pass">80%</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-
         </section>
 
 
         <section id="fees" class="page">
-
-            <div class="box placeholder">
-                <h2>Fees</h2>
-                <p>Fees management section.</p>
+            <div class="box">
+                <h2>Fees Management</h2>
+                <p>Sample fee information for the current academic session.</p>
+                <div class="fee-grid">
+                    <div class="fee-card total"><span>💰 Total Fees</span><strong>₹45,000</strong><small>Academic session 2026-27</small></div>
+                    <div class="fee-card paid"><span>✅ Paid</span><strong>₹30,000</strong><small>Payment received</small></div>
+                    <div class="fee-card due"><span>⚠️ Due</span><strong>₹15,000</strong><small>Next payment: 15 Sep 2026</small></div>
+                </div>
+                <div class="fee-progress-box">
+                    <div class="section-head"><b>Payment Progress</b><strong>67%</strong></div>
+                    <div class="progress"><div class="progress-fill fee-progress" style="width:67%"></div></div>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Receipt</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
+                        <tbody>
+                            <tr><td>REC-1001</td><td>10 Jul 2026</td><td>₹20,000</td><td><span class="badge pass">Paid</span></td></tr>
+                            <tr><td>REC-1002</td><td>05 Aug 2026</td><td>₹10,000</td><td><span class="badge pass">Paid</span></td></tr>
+                            <tr><td>—</td><td>15 Sep 2026</td><td>₹15,000</td><td><span class="badge fail">Due</span></td></tr>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-
         </section>
 
 
         <section id="notices" class="page">
-
-            <div class="box placeholder">
-                <h2>Notices</h2>
-                <p>Important notices will appear here.</p>
+            <div class="box">
+                <div class="section-head">
+                    <div><h2>Notice Board</h2><p>Latest academic and campus announcements.</p></div>
+                    <span class="notice-count">3 New</span>
+                </div>
+                <div class="notice-list">
+                    <article class="notice-card"><div class="notice-icon">📢</div><div><span class="notice-date">09 Aug 2026</span><h3>Mid-Semester Examination</h3><p>Students should check the examination schedule and carry their valid ID card.</p></div></article>
+                    <article class="notice-card"><div class="notice-icon">📚</div><div><span class="notice-date">07 Aug 2026</span><h3>Library Timing Updated</h3><p>The library will remain open from 9:00 AM to 6:00 PM on working days.</p></div></article>
+                    <article class="notice-card"><div class="notice-icon">🎓</div><div><span class="notice-date">05 Aug 2026</span><h3>Project Submission</h3><p>Project reports should be submitted before the department deadline.</p></div></article>
+                </div>
             </div>
-
         </section>
 
 
