@@ -1,55 +1,77 @@
-/* ==========================================
-   STUDENTHUB COMPLETE JAVASCRIPT
-========================================== */
+/* =========================================================
+   STUDENTHUB - FIREBASE JAVASCRIPT
+   ========================================================= */
+
+/* ================= FIREBASE CONFIG ================= */
+
 const firebaseConfig = {
-  apiKey: "AIzaSyD5KEHL9H9jR8rz0Uc9CLndpmrEQcuw23w",
-  authDomain: "lg-management-ed8a2.firebaseapp.com",
-  projectId: "lg-management-ed8a2",
-  storageBucket: "lg-management-ed8a2.firebasestorage.app",
-  messagingSenderId: "455533514999",
-  appId: "1:455533514999:web:6b74d10745a6b25be183f2"
+    apiKey: "AIzaSyD5KEHL9H9jR8rz0Uc9CLndpmrEQcuw23w",
+    authDomain: "lg-management-ed8a2.firebaseapp.com",
+    projectId: "lg-management-ed8a2",
+    storageBucket: "lg-management-ed8a2.firebasestorage.app",
+    messagingSenderId: "455533514999",
+    appId: "1:455533514999:web:6b74d10745a6b25be183f2"
 };
 
 firebase.initializeApp(firebaseConfig);
+
 const db = firebase.firestore();
+
 const $ = (id) => document.getElementById(id);
 
 
-/* ==========================================
-   STUDENTS
-========================================== */
+/* ================= STUDENTS ================= */
 
 let students = [];
 
-try {
-    students = JSON.parse(
-        localStorage.getItem("studenthub_students") || "[]"
-    );
 
-    if (!Array.isArray(students)) {
+/* Firebase se students load karo */
+
+async function loadStudents() {
+
+    try {
+
+        const snapshot = await db
+            .collection("students")
+            .get();
+
         students = [];
+
+        snapshot.forEach((doc) => {
+
+            students.push({
+                key: doc.id,
+                firebaseId: doc.id,
+                ...doc.data()
+            });
+
+        });
+
+        renderStudents();
+        updateDashboard();
+
+        console.log("Students loaded from Firebase:", students);
+
+    } catch (error) {
+
+        console.error("Firebase load error:", error);
+
+        alert(
+            "Firebase se data load nahi ho pa raha.\n\n" +
+            "Console me error check karein."
+        );
+
     }
 
-} catch {
-    students = [];
 }
 
 
-function saveStudents() {
-    localStorage.setItem(
-        "studenthub_students",
-        JSON.stringify(students)
-    );
-}
-
-
-/* ==========================================
-   ACCOUNTS
-========================================== */
+/* ================= ACCOUNTS ================= */
 
 let accounts = [];
 
 try {
+
     accounts = JSON.parse(
         localStorage.getItem("studenthub_accounts") || "[]"
     );
@@ -59,21 +81,23 @@ try {
     }
 
 } catch {
+
     accounts = [];
+
 }
 
 
 function saveAccounts() {
+
     localStorage.setItem(
         "studenthub_accounts",
         JSON.stringify(accounts)
     );
+
 }
 
 
-/* ==========================================
-   LOGIN / CREATE ACCOUNT
-========================================== */
+/* ================= LOGIN / CREATE ================= */
 
 const showLogin = $("showLogin");
 const showCreate = $("showCreate");
@@ -89,6 +113,7 @@ function showLoginSection() {
 
     showLogin.classList.add("active");
     showCreate.classList.remove("active");
+
 }
 
 
@@ -99,6 +124,7 @@ function showCreateSection() {
 
     showCreate.classList.add("active");
     showLogin.classList.remove("active");
+
 }
 
 
@@ -114,9 +140,7 @@ showCreate.addEventListener(
 );
 
 
-/* ==========================================
-   CREATE ACCOUNT
-========================================== */
+/* ================= CREATE ACCOUNT ================= */
 
 $("createAccountForm").addEventListener(
     "submit",
@@ -145,6 +169,7 @@ $("createAccountForm").addEventListener(
                 "Please fill all details.";
 
             return;
+
         }
 
 
@@ -156,6 +181,7 @@ $("createAccountForm").addEventListener(
                 "Enter a valid email.";
 
             return;
+
         }
 
 
@@ -167,6 +193,7 @@ $("createAccountForm").addEventListener(
                 "Password must be at least 4 characters.";
 
             return;
+
         }
 
 
@@ -185,6 +212,7 @@ $("createAccountForm").addEventListener(
                 "This account already exists.";
 
             return;
+
         }
 
 
@@ -216,9 +244,11 @@ $("createAccountForm").addEventListener(
         setTimeout(
             function() {
 
-                $("userId").value = email;
+                $("userId").value =
+                    email;
 
-                $("password").value = password;
+                $("password").value =
+                    password;
 
                 $("createAccountForm").reset();
 
@@ -234,9 +264,7 @@ $("createAccountForm").addEventListener(
 );
 
 
-/* ==========================================
-   LOGIN
-========================================== */
+/* ================= LOGIN ================= */
 
 $("loginForm").addEventListener(
     "submit",
@@ -245,23 +273,24 @@ $("loginForm").addEventListener(
         event.preventDefault();
 
         const user =
-            $("userId").value.trim().toLowerCase();
+            $("userId")
+                .value
+                .trim()
+                .toLowerCase();
 
         const password =
-            $("password").value.trim();
+            $("password")
+                .value
+                .trim();
 
         const error =
             $("loginError");
 
 
-        /* DEFAULT ADMIN */
-
         const admin =
             user === "admin" &&
             password === "1234";
 
-
-        /* CREATED ACCOUNT */
 
         const account =
             accounts.find(
@@ -277,6 +306,7 @@ $("loginForm").addEventListener(
                 "Invalid User ID/Email or Password.";
 
             return;
+
         }
 
 
@@ -301,19 +331,20 @@ $("loginForm").addEventListener(
 
         openPage("dashboard");
 
+        loadStudents();
+
     }
 );
 
 
-/* ==========================================
-   PASSWORD
-========================================== */
+/* ================= PASSWORD ================= */
 
 $("togglePassword").addEventListener(
     "click",
     function() {
 
-        const input = $("password");
+        const input =
+            $("password");
 
 
         if (input.type === "password") {
@@ -334,9 +365,7 @@ $("togglePassword").addEventListener(
 );
 
 
-/* ==========================================
-   THREE DOT MENU
-========================================== */
+/* ================= THREE DOT MENU ================= */
 
 const menuBtn = $("menuBtn");
 const sidebar = $("sidebar");
@@ -348,6 +377,7 @@ function openMenu() {
     sidebar.classList.add("open");
 
     overlay.classList.add("show");
+
 }
 
 
@@ -356,6 +386,7 @@ function closeMenu() {
     sidebar.classList.remove("open");
 
     overlay.classList.remove("show");
+
 }
 
 
@@ -365,7 +396,9 @@ menuBtn.addEventListener(
 
         event.stopPropagation();
 
-        if (sidebar.classList.contains("open")) {
+        if (
+            sidebar.classList.contains("open")
+        ) {
 
             closeMenu();
 
@@ -390,16 +423,16 @@ document.addEventListener(
     function(event) {
 
         if (event.key === "Escape") {
+
             closeMenu();
+
         }
 
     }
 );
 
 
-/* ==========================================
-   PAGE NAVIGATION
-========================================== */
+/* ================= PAGE NAVIGATION ================= */
 
 function openPage(page) {
 
@@ -503,44 +536,34 @@ function openPage(page) {
 
 
     if (page === "records") {
+
         renderStudents();
+
     }
 
 
     if (page === "courses") {
+
         renderCourses();
+
     }
 
 
     if (page === "statistics") {
+
         updateStatistics();
-    }
 
-
-    if (page === "attendance") {
-        renderAttendance();
-    }
-
-
-    if (page === "fees") {
-        renderFees();
-    }
-
-
-    if (page === "notices") {
-        renderNotices();
     }
 
 
     updateDashboard();
 
     closeMenu();
+
 }
 
 
-/* ==========================================
-   ALL PAGE BUTTONS
-========================================== */
+/* ================= ALL PAGE BUTTONS ================= */
 
 document.addEventListener(
     "click",
@@ -563,41 +586,54 @@ document.addEventListener(
 );
 
 
-/* ==========================================
+/* =========================================================
    ADD STUDENT
-========================================== */
+   ========================================================= */
 
 $("studentForm").addEventListener(
     "submit",
-    function(event) {
+    async function(event) {
 
         event.preventDefault();
 
 
         const student = {
 
-            key: Date.now().toString(),
-
             name:
-                $("studentName").value.trim(),
+                $("studentName")
+                    .value
+                    .trim(),
 
             id:
-                $("studentId").value.trim(),
+                $("studentId")
+                    .value
+                    .trim(),
 
             email:
-                $("studentEmail").value.trim(),
+                $("studentEmail")
+                    .value
+                    .trim(),
 
             phone:
-                $("studentPhone").value.trim(),
+                $("studentPhone")
+                    .value
+                    .trim(),
 
             course:
-                $("studentCourse").value,
+                $("studentCourse")
+                    .value,
 
             result:
-                $("studentResult").value
+                $("studentResult")
+                    .value,
+
+            createdAt:
+                new Date().toISOString()
 
         };
 
+
+        /* Required fields */
 
         if (!student.name || !student.id) {
 
@@ -606,58 +642,92 @@ $("studentForm").addEventListener(
             );
 
             return;
+
         }
 
 
-        const duplicate =
-            students.some(
-                item =>
-                    item.id.toLowerCase() ===
-                    student.id.toLowerCase()
+        /* Duplicate ID Firebase me check karo */
+
+        try {
+
+            const duplicate =
+                await db
+                    .collection("students")
+                    .where(
+                        "id",
+                        "==",
+                        student.id
+                    )
+                    .get();
+
+
+            if (!duplicate.empty) {
+
+                alert(
+                    "This Student ID already exists."
+                );
+
+                return;
+
+            }
+
+
+            /* Firebase me save */
+
+            const docRef =
+                await db
+                    .collection("students")
+                    .add(student);
+
+
+            console.log(
+                "Student saved to Firebase:",
+                docRef.id
             );
 
 
-        if (duplicate) {
+            /* Form clear */
+
+            this.reset();
+
+
+            /* Firebase se fresh data lao */
+
+            await loadStudents();
+
 
             alert(
-                "This Student ID already exists."
+                "Student added successfully! 🎉\n\n" +
+                "Firebase me save ho gaya."
             );
 
-            return;
+
+            openPage("records");
+
+
+        } catch (error) {
+
+            console.error(
+                "Firebase error:",
+                error
+            );
+
+
+            alert(
+                "Student Firebase me save nahi hua.\n\n" +
+                "Error: " +
+                error.message
+            );
+
         }
-
-
-        students.push(student);
-db.collection("students").add(student)
-  .then(() => {
-    console.log("Student saved to Firebase");
-  })
-  .catch((error) => {
-    console.error("Firebase error:", error);
-  });
-        saveStudents();
-
-
-        this.reset();
-
-
-        updateDashboard();
-
-
-        alert(
-            "Student added successfully! 🎉"
-        );
-
-
-        openPage("records");
 
     }
 );
 
 
-/* ==========================================
+/* =========================================================
    DASHBOARD
-========================================== */
+   ========================================================= */
 
 function updateDashboard() {
 
@@ -682,7 +752,10 @@ function updateDashboard() {
     const courses =
         new Set(
             students
-                .map(student => student.course)
+                .map(
+                    student =>
+                        student.course
+                )
                 .filter(Boolean)
         ).size;
 
@@ -690,23 +763,25 @@ function updateDashboard() {
     $("totalCount").textContent =
         total;
 
+
     $("passedCount").textContent =
         passed;
 
+
     $("failedCount").textContent =
         failed;
+
 
     $("courseCount").textContent =
         courses;
 
 
     updateStatistics();
+
 }
 
 
-/* ==========================================
-   SAFE TEXT
-========================================== */
+/* ================= SAFE TEXT ================= */
 
 function safe(value) {
 
@@ -729,12 +804,13 @@ function safe(value) {
 
             }
         );
+
 }
 
 
-/* ==========================================
+/* =========================================================
    RECORDS
-========================================== */
+   ========================================================= */
 
 function renderStudents() {
 
@@ -757,15 +833,15 @@ function renderStudents() {
 
                 const text = (
 
-                    student.name +
+                    (student.name || "") +
                     " " +
-                    student.id +
+                    (student.id || "") +
                     " " +
-                    student.email +
+                    (student.email || "") +
                     " " +
-                    student.course +
+                    (student.course || "") +
                     " " +
-                    student.result
+                    (student.result || "")
 
                 ).toLowerCase();
 
@@ -785,6 +861,7 @@ function renderStudents() {
             "block";
 
         return;
+
     }
 
 
@@ -801,12 +878,22 @@ function renderStudents() {
 
             row.innerHTML = `
 
-                <td>${index + 1}</td>
+                <td>
+                    ${index + 1}
+                </td>
 
                 <td>
-                    <b>${safe(student.name)}</b>
+
+                    <b>
+                        ${safe(student.name)}
+                    </b>
+
                     <br>
-                    <small>${safe(student.email)}</small>
+
+                    <small>
+                        ${safe(student.email)}
+                    </small>
+
                 </td>
 
                 <td>
@@ -821,8 +908,8 @@ function renderStudents() {
 
                     <span class="badge ${
                         student.result === "Passed"
-                        ? "pass"
-                        : "fail"
+                            ? "pass"
+                            : "fail"
                     }">
 
                         ${safe(student.result)}
@@ -835,7 +922,7 @@ function renderStudents() {
 
                     <button
                         class="delete-btn"
-                        data-delete="${student.key}"
+                        data-delete="${student.firebaseId}"
                     >
                         Delete
                     </button>
@@ -858,42 +945,64 @@ function renderStudents() {
 
                 button.addEventListener(
                     "click",
-                    function() {
+                    async function() {
 
                         if (
                             !confirm(
                                 "Delete this student?"
                             )
                         ) {
+
                             return;
+
                         }
 
 
-                        students =
-                            students.filter(
-                                student =>
-                                    student.key !==
-                                    button.dataset.delete
+                        const documentId =
+                            button.dataset.delete;
+
+
+                        try {
+
+                            await db
+                                .collection("students")
+                                .doc(documentId)
+                                .delete();
+
+
+                            await loadStudents();
+
+
+                            alert(
+                                "Student deleted successfully."
                             );
 
 
-                        saveStudents();
+                        } catch (error) {
 
-                        renderStudents();
+                            console.error(
+                                "Delete error:",
+                                error
+                            );
 
-                        updateDashboard();
+
+                            alert(
+                                "Student delete nahi hua.\n\n" +
+                                error.message
+                            );
+
+                        }
 
                     }
                 );
 
             }
         );
+
 }
 
 
-/* ==========================================
-   SEARCH
-========================================== */
+/* ================= SEARCH ================= */
 
 $("searchInput").addEventListener(
     "input",
@@ -901,9 +1010,9 @@ $("searchInput").addEventListener(
 );
 
 
-/* ==========================================
+/* =========================================================
    COURSES
-========================================== */
+   ========================================================= */
 
 function renderCourses() {
 
@@ -1000,12 +1109,13 @@ function renderCourses() {
 
         }
     );
+
 }
 
 
-/* ==========================================
+/* =========================================================
    STATISTICS
-========================================== */
+   ========================================================= */
 
 function updateStatistics() {
 
@@ -1069,127 +1179,49 @@ function updateStatistics() {
 
     $("statFailed").textContent =
         failed;
+
 }
 
 
-/* ==========================================
-   ATTENDANCE
-========================================== */
+/* =========================================================
+   LOGOUT
+   ========================================================= */
 
-function renderAttendance() {
+$("logout").addEventListener(
+    "click",
+    function() {
 
-    const table =
-        $("attendanceTable");
+        sessionStorage.removeItem(
+            "studenthub_logged_in"
+        );
 
-    if (!table) {
-        return;
+
+        $("app")
+            .classList
+            .add("hidden");
+
+
+        $("loginPage")
+            .classList
+            .remove("hidden");
+
+
+        $("userId").value = "";
+
+        $("password").value = "";
+
+
+        showLoginSection();
+
+        closeMenu();
+
     }
+);
 
 
-    const rows = [
-
-        [
-            "Web Development",
-            12,
-            10,
-            "83%"
-        ],
-
-        [
-            "Database Management",
-            13,
-            11,
-            "85%"
-        ],
-
-        [
-            "Computer Networks",
-            10,
-            8,
-            "80%"
-        ],
-
-        [
-            "Software Engineering",
-            15,
-            12,
-            "80%"
-        ]
-
-    ];
-
-
-    table.innerHTML =
-        rows.map(
-            row => `
-
-                <tr>
-
-                    <td>
-                        <b>${safe(row[0])}</b>
-                    </td>
-
-                    <td>
-                        ${row[1]}
-                    </td>
-
-                    <td>
-                        ${row[2]}
-                    </td>
-
-                    <td>
-                        <span class="badge pass">
-                            ${safe(row[3])}
-                        </span>
-                    </td>
-
-                </tr>
-
-            `
-        ).join("");
-
-}
-
-
-/* ==========================================
-   FEES
-========================================== */
-
-function renderFees() {
-
-    /*
-       Demo fee data is already displayed
-       in the Fees page.
-
-       This function is kept for future
-       database integration.
-    */
-
-    return true;
-}
-
-
-/* ==========================================
-   NOTICES
-========================================== */
-
-function renderNotices() {
-
-    /*
-       Demo notices are already displayed
-       in the Notices page.
-
-       This function is kept for future
-       database integration.
-    */
-
-    return true;
-}
-
-
-/* ==========================================
-   INPUT TEXT VISIBILITY FIX
-========================================== */
+/* =========================================================
+   INPUT VISIBILITY
+   ========================================================= */
 
 document
     .querySelectorAll(
@@ -1235,47 +1267,11 @@ document
     );
 
 
-/* ==========================================
-   LOGOUT
-========================================== */
+/* =========================================================
+   START APP
+   ========================================================= */
 
-$("logout").addEventListener(
-    "click",
-    function() {
-
-        sessionStorage.removeItem(
-            "studenthub_logged_in"
-        );
-
-
-        $("app")
-            .classList
-            .add("hidden");
-
-
-        $("loginPage")
-            .classList
-            .remove("hidden");
-
-
-        $("userId").value = "";
-
-        $("password").value = "";
-
-
-        showLoginSection();
-
-        closeMenu();
-
-    }
-);
-
-
-/* ==========================================
-   START
-========================================== */
-
-function startApp() {
+async function startApp() {
 
     updateDashboard();
 
@@ -1302,6 +1298,12 @@ function startApp() {
 
         openPage("dashboard");
 
+
+        /* Firebase se data load */
+
+        await loadStudents();
+
+
     } else {
 
         $("loginPage")
@@ -1320,5 +1322,7 @@ function startApp() {
 
 }
 
+
+/* ================= START ================= */
 
 startApp();
