@@ -1,14 +1,13 @@
 /* ==========================================
    STUDENTHUB COMPLETE JAVASCRIPT
-   ========================================== */
-
-
-/* ---------- HELPER ---------- */
+========================================== */
 
 const $ = (id) => document.getElementById(id);
 
 
-/* ---------- STUDENTS ---------- */
+/* ==========================================
+   STUDENTS
+========================================== */
 
 let students = [];
 
@@ -34,7 +33,9 @@ function saveStudents() {
 }
 
 
-/* ---------- ACCOUNTS ---------- */
+/* ==========================================
+   ACCOUNTS
+========================================== */
 
 let accounts = [];
 
@@ -62,7 +63,7 @@ function saveAccounts() {
 
 /* ==========================================
    LOGIN / CREATE ACCOUNT
-   ========================================== */
+========================================== */
 
 const showLogin = $("showLogin");
 const showCreate = $("showCreate");
@@ -105,14 +106,13 @@ showCreate.addEventListener(
 
 /* ==========================================
    CREATE ACCOUNT
-   ========================================== */
+========================================== */
 
 $("createAccountForm").addEventListener(
     "submit",
     function(event) {
 
         event.preventDefault();
-
 
         const name =
             $("createName").value.trim();
@@ -226,7 +226,7 @@ $("createAccountForm").addEventListener(
 
 /* ==========================================
    LOGIN
-   ========================================== */
+========================================== */
 
 $("loginForm").addEventListener(
     "submit",
@@ -234,13 +234,11 @@ $("loginForm").addEventListener(
 
         event.preventDefault();
 
-
         const user =
             $("userId").value.trim().toLowerCase();
 
         const password =
             $("password").value.trim();
-
 
         const error =
             $("loginError");
@@ -299,7 +297,7 @@ $("loginForm").addEventListener(
 
 /* ==========================================
    PASSWORD
-   ========================================== */
+========================================== */
 
 $("togglePassword").addEventListener(
     "click",
@@ -328,7 +326,7 @@ $("togglePassword").addEventListener(
 
 /* ==========================================
    THREE DOT MENU
-   ========================================== */
+========================================== */
 
 const menuBtn = $("menuBtn");
 const sidebar = $("sidebar");
@@ -391,7 +389,7 @@ document.addEventListener(
 
 /* ==========================================
    PAGE NAVIGATION
-   ========================================== */
+========================================== */
 
 function openPage(page) {
 
@@ -509,13 +507,30 @@ function openPage(page) {
     }
 
 
+    if (page === "attendance") {
+        renderAttendance();
+    }
+
+
+    if (page === "fees") {
+        renderFees();
+    }
+
+
+    if (page === "notices") {
+        renderNotices();
+    }
+
+
     updateDashboard();
 
     closeMenu();
 }
 
 
-/* ---------- ALL PAGE BUTTONS ---------- */
+/* ==========================================
+   ALL PAGE BUTTONS
+========================================== */
 
 document.addEventListener(
     "click",
@@ -540,7 +555,7 @@ document.addEventListener(
 
 /* ==========================================
    ADD STUDENT
-   ========================================== */
+========================================== */
 
 $("studentForm").addEventListener(
     "submit",
@@ -626,7 +641,7 @@ $("studentForm").addEventListener(
 
 /* ==========================================
    DASHBOARD
-   ========================================== */
+========================================== */
 
 function updateDashboard() {
 
@@ -675,7 +690,7 @@ function updateDashboard() {
 
 /* ==========================================
    SAFE TEXT
-   ========================================== */
+========================================== */
 
 function safe(value) {
 
@@ -703,7 +718,7 @@ function safe(value) {
 
 /* ==========================================
    RECORDS
-   ========================================== */
+========================================== */
 
 function renderStudents() {
 
@@ -860,7 +875,9 @@ function renderStudents() {
 }
 
 
-/* ---------- SEARCH ---------- */
+/* ==========================================
+   SEARCH
+========================================== */
 
 $("searchInput").addEventListener(
     "input",
@@ -870,7 +887,7 @@ $("searchInput").addEventListener(
 
 /* ==========================================
    COURSES
-   ========================================== */
+========================================== */
 
 function renderCourses() {
 
@@ -972,7 +989,7 @@ function renderCourses() {
 
 /* ==========================================
    STATISTICS
-   ========================================== */
+========================================== */
 
 function updateStatistics() {
 
@@ -1040,8 +1057,171 @@ function updateStatistics() {
 
 
 /* ==========================================
+   ATTENDANCE
+========================================== */
+
+function renderAttendance() {
+
+    const table =
+        $("attendanceTable");
+
+    if (!table) {
+        return;
+    }
+
+
+    const rows = [
+
+        [
+            "Web Development",
+            12,
+            10,
+            "83%"
+        ],
+
+        [
+            "Database Management",
+            13,
+            11,
+            "85%"
+        ],
+
+        [
+            "Computer Networks",
+            10,
+            8,
+            "80%"
+        ],
+
+        [
+            "Software Engineering",
+            15,
+            12,
+            "80%"
+        ]
+
+    ];
+
+
+    table.innerHTML =
+        rows.map(
+            row => `
+
+                <tr>
+
+                    <td>
+                        <b>${safe(row[0])}</b>
+                    </td>
+
+                    <td>
+                        ${row[1]}
+                    </td>
+
+                    <td>
+                        ${row[2]}
+                    </td>
+
+                    <td>
+                        <span class="badge pass">
+                            ${safe(row[3])}
+                        </span>
+                    </td>
+
+                </tr>
+
+            `
+        ).join("");
+
+}
+
+
+/* ==========================================
+   FEES
+========================================== */
+
+function renderFees() {
+
+    /*
+       Demo fee data is already displayed
+       in the Fees page.
+
+       This function is kept for future
+       database integration.
+    */
+
+    return true;
+}
+
+
+/* ==========================================
+   NOTICES
+========================================== */
+
+function renderNotices() {
+
+    /*
+       Demo notices are already displayed
+       in the Notices page.
+
+       This function is kept for future
+       database integration.
+    */
+
+    return true;
+}
+
+
+/* ==========================================
+   INPUT TEXT VISIBILITY FIX
+========================================== */
+
+document
+    .querySelectorAll(
+        ".student-form input, .student-form select"
+    )
+    .forEach(
+        function(field) {
+
+            field.addEventListener(
+                "input",
+                function() {
+
+                    this.style.color =
+                        "#172033";
+
+                    this.style.webkitTextFillColor =
+                        "#172033";
+
+                    this.style.backgroundColor =
+                        "#ffffff";
+
+                }
+            );
+
+
+            field.addEventListener(
+                "change",
+                function() {
+
+                    this.style.color =
+                        "#172033";
+
+                    this.style.webkitTextFillColor =
+                        "#172033";
+
+                    this.style.backgroundColor =
+                        "#ffffff";
+
+                }
+            );
+
+        }
+    );
+
+
+/* ==========================================
    LOGOUT
-   ========================================== */
+========================================== */
 
 $("logout").addEventListener(
     "click",
@@ -1077,7 +1257,7 @@ $("logout").addEventListener(
 
 /* ==========================================
    START
-   ========================================== */
+========================================== */
 
 function startApp() {
 
@@ -1098,9 +1278,11 @@ function startApp() {
             .classList
             .add("hidden");
 
+
         $("app")
             .classList
             .remove("hidden");
+
 
         openPage("dashboard");
 
@@ -1110,13 +1292,16 @@ function startApp() {
             .classList
             .remove("hidden");
 
+
         $("app")
             .classList
             .add("hidden");
 
+
         showLoginSection();
 
     }
+
 }
 
 
