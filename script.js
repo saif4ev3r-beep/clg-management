@@ -1,7 +1,17 @@
 /* ==========================================
    STUDENTHUB COMPLETE JAVASCRIPT
 ========================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyD5KEHL9H9jR8rz0Uc9CLndpmrEQcuw23w",
+  authDomain: "lg-management-ed8a2.firebaseapp.com",
+  projectId: "lg-management-ed8a2",
+  storageBucket: "lg-management-ed8a2.firebasestorage.app",
+  messagingSenderId: "455533514999",
+  appId: "1:455533514999:web:6b74d10745a6b25be183f2"
+};
 
+firebase.initializeApp(firebaseConfig);
+const db = firebase.firestore();
 const $ = (id) => document.getElementById(id);
 
 
