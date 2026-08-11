@@ -5,7 +5,7 @@
 /* ================= FIREBASE CONFIG ================= */
 
 const firebaseConfig = {
-  apiKey: "AIzaSyD5KEHL9H9jR8rz0Uc9CLndpmrEQcuw23w",
+  apiKey: "Firebase Console wala apiKey",
   authDomain: "lg-management-ed8a2.firebaseapp.com",
   projectId: "lg-management-ed8a2",
   storageBucket: "lg-management-ed8a2.firebasestorage.app",
@@ -13,6 +13,10 @@ const firebaseConfig = {
   appId: "1:455533514999:web:6b74d10745a6b25be183f2"
 };
 
+firebase.initializeApp(firebaseConfig);
+
+const db = firebase.firestore();
+const auth = firebase.auth();
 firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
