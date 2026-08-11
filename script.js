@@ -1104,7 +1104,7 @@ $("studentForm").addEventListener(
       await loadStudents();
 
       alert(
-        "Student added successfully! 🎉\n\nFirebase me save ho gaya."
+        "Student added successfully! 🎉\n\n Your data successfuly save."
       );
 
       openPage(
