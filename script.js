@@ -1571,7 +1571,30 @@ $("logout").addEventListener(
 
 
 /* ================= START ================= */
+function updateAdminUI() {
+
+    const addStudentButtons =
+        document.querySelectorAll(
+            '[data-page="add"]'
+        );
+
+    const admin =
+        isAdmin();
+
+    addStudentButtons.forEach(
+        button => {
+
+            button.style.display =
+                admin ? "" : "none";
+
+        }
+    );
+
+}
 
 renderCourses();
 
 updateDashboard();
+setTimeout(function () {
+    updateAdminUI();
+}, 1000);
