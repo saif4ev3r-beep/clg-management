@@ -216,22 +216,36 @@ $("createAccountForm").addEventListener(
         }
 
 
-        const account = {
+     try {
 
-            id: Date.now(),
+    const userCredential =
+        await firebase.auth().createUserWithEmailAndPassword(
+            email,
+            password
+        );
 
-            name: name,
+    const user = userCredential.user;
 
-            email: email,
+    await db.collection("users").doc(user.uid).set({
+        name: name,
+        email: email,
+        createdAt: new Date().toISOString()
+    });
 
-            password: password
+    error.className = "success-message";
 
-        };
+    error.textContent =
+        "Account created successfully! 🎉";
 
+} catch (firebaseError) {
 
-        accounts.push(account);
+    error.className = "error";
 
-        saveAccounts();
+    error.textContent =
+        firebaseError.message;
+
+    return;
+}
 
 
         error.className =
