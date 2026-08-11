@@ -138,20 +138,25 @@ function showApp(
   role = "Student"
 ) {
 
-  // Set the FINAL role before opening any page.
-  currentRole = role || "Student";
+  currentRole =
+    role || "Student";
 
   $("currentUserName").textContent =
-    userName || email || "User";
+    userName ||
+    email ||
+    "User";
 
   $("profileName").textContent =
-    userName || "Student User";
+    userName ||
+    "Student User";
 
   $("profileEmail").textContent =
-    email || "-";
+    email ||
+    "-";
 
   $("profileRole").textContent =
     currentRole;
+
 
   $("loginPage")
     .classList
@@ -161,25 +166,13 @@ function showApp(
     .classList
     .remove("hidden");
 
-  // Apply permissions immediately.
+
   updateRoleUI();
 
-  // Open dashboard only after the role is already known.
   openPage("dashboard");
 
-  // Apply once more after navigation has finished.
-  updateRoleUI();
-
-  // Some dashboard elements are rendered asynchronously.
-  requestAnimationFrame(() => {
-    updateRoleUI();
-  });
-
-  setTimeout(() => {
-    updateRoleUI();
-  }, 200);
-
   loadStudents();
+
 }
 
 
@@ -192,9 +185,10 @@ function updateRoleUI() {
   const admin =
     isAdmin();
 
+
   /*
-    Every Add Student navigation button
-    is Admin-only.
+    All buttons having data-page="add"
+    will be visible only to Admin.
   */
 
   document
@@ -207,16 +201,13 @@ function updateRoleUI() {
         button.style.display =
           admin ? "" : "none";
 
-        button.disabled =
-          !admin;
-
       }
     );
 
 
   /*
     Add Student page itself
-    is Admin-only.
+    is also Admin-only.
   */
 
   const addPage =
@@ -778,56 +769,255 @@ $("loginForm")
 
       event.preventDefault();
 
+
       const email =
         $("userId")
           .value
           .trim()
           .toLowerCase();
 
+
       const password =
         $("password")
           .value
           .trim();
 
+
       /*
         IMPORTANT:
-        The role dropdown is NOT used here.
+        We DO NOT trust the role dropdown.
 
-        Firebase Auth only signs the user in.
-        auth.onAuthStateChanged(
+        Real role comes from:
+        Firestore -> users -> UID -> role
+      */
+
+
+      showMessage(
+        "loginError",
+        ""
+      );
+
+
+      if (
+        !email ||
+        !password
+      ) {
+
+        showMessage(
+          "loginError",
+          "Enter email and password.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      showMessage(
+        "loginError",
+        "Signing in...",
+        "info"
+      );
+
+
+      try {
+
+        const credential =
+          await auth
+            .signInWithEmailAndPassword(
+              email,
+              password
+            );
+
+
+        const user =
+          credential.user;
+
+
+        let name =
+          user.displayName ||
+          "Student User";
+
+
+        let role =
+          "Student";
+
+
+        /*
+          Get actual role
+          from Firestore.
+        */
+
+        try {
+
+          const profileDoc =
+            await db
+              .collection("users")
+              .doc(user.uid)
+              .get();
+
+
+          if (
+            profileDoc.exists
+          ) {
+
+            const data =
+              profileDoc.data();
+
+
+            name =
+              data.name ||
+              name;
+
+
+            role =
+              data.role ||
+              "Student";
+
+          }
+
+        } catch (
+          profileError
+        ) {
+
+          console.warn(
+            "Profile read failed:",
+            profileError
+          );
+
+        }
+
+
+        /*
+          Main Admin email is ALWAYS Admin.
+        */
+
+        if (
+          user.email &&
+          user.email
+            .toLowerCase() ===
+            ADMIN_EMAIL
+              .toLowerCase()
+        ) {
+
+          role =
+            "Admin";
+
+        }
+
+
+        showMessage(
+          "loginError",
+          ""
+        );
+
+
+        showApp(
+          name,
+          user.email,
+          role
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "Login error:",
+          error
+        );
+
+
+        let msg =
+          "Invalid email or password.";
+
+
+        if (
+          error.code ===
+          "auth/user-not-found"
+        ) {
+
+          msg =
+            "Account not found.";
+
+        }
+
+
+        if (
+          error.code ===
+          "auth/wrong-password"
+        ) {
+
+          msg =
+            "Wrong password.";
+
+        }
+
+
+        if (
+          error.code ===
+          "auth/invalid-credential"
+        ) {
+
+          msg =
+            "Invalid email or password.";
+
+        }
+
+
+        if (
+          error.code ===
+          "auth/too-many-requests"
+        ) {
+
+          msg =
+            "Too many attempts. Try again later.";
+
+        }
+
+
+        showMessage(
+          "loginError",
+          msg,
+          "error"
+        );
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   FIREBASE AUTH STATE
+   ========================================================= */
+
+auth.onAuthStateChanged(
   async (user) => {
 
     if (!user) {
 
-      currentRole = "Student";
-      currentProfile = null;
+      currentRole =
+        "Student";
+
+      currentProfile =
+        null;
 
       showLoginPage();
 
       return;
+
     }
 
-    /*
-      Keep the app hidden while the user's
-      Firestore role is being loaded.
-      This prevents the app from briefly
-      appearing with the wrong permissions.
-    */
-
-    $("loginPage")
-      .classList
-      .add("hidden");
-
-    $("app")
-      .classList
-      .add("hidden");
 
     let name =
       user.displayName ||
       "Student User";
 
+
     let role =
       "Student";
+
 
     try {
 
@@ -837,83 +1027,52 @@ $("loginForm")
           .doc(user.uid)
           .get();
 
+
       if (doc.exists) {
 
         const data =
           doc.data();
 
+
         name =
           data.name ||
           name;
 
+
         role =
           data.role ||
           "Student";
+
       }
 
     } catch (error) {
 
-      console.error(
+      console.warn(
         "Could not load user profile:",
         error
       );
 
-      /*
-        If profile cannot be read,
-        do NOT give Admin access.
-      */
-
-      role = "Student";
     }
 
+
     /*
-      The fixed Admin email is ALWAYS Admin.
+      Main Admin account
+      always remains Admin.
     */
 
     if (
       user.email &&
       user.email
         .toLowerCase() ===
-        ADMIN_EMAIL.toLowerCase()
+        ADMIN_EMAIL
+          .toLowerCase()
     ) {
 
-      role = "Admin";
-    }
-
-    /*
-      Normalize role.
-      Only these three roles are accepted.
-    */
-
-    const normalizedRole =
-      String(role)
-        .trim()
-        .toLowerCase();
-
-    if (
-      normalizedRole === "admin"
-    ) {
-
-      role = "Admin";
-
-    } else if (
-      normalizedRole === "teacher"
-    ) {
-
-      role = "Teacher";
-
-    } else {
-
-      role = "Student";
+      role =
+        "Admin";
 
     }
 
-    /*
-      Set currentRole BEFORE showApp().
-      This is the important fix.
-    */
-
-    currentRole = role;
 
     currentProfile = {
 
@@ -931,10 +1090,6 @@ $("loginForm")
 
     };
 
-    /*
-      Now open the app exactly once,
-      with the correct role already loaded.
-    */
 
     showApp(
       name,
@@ -1263,9 +1418,6 @@ async function loadStudents() {
     updateDashboard();
 
     renderCourses();
-
-    // Student rows/delete buttons may have just been rendered.
-    updateRoleUI();
 
   } catch (error) {
 
@@ -2000,3 +2152,5 @@ $("logout")
 renderCourses();
 
 updateDashboard();
+
+
