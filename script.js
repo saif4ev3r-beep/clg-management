@@ -1,12 +1,13 @@
 /* =========================================================
    STUDENTHUB - WORKING FIREBASE VERSION
+   ADMIN + TEACHER + STUDENT ROLE SYSTEM
    ========================================================= */
+
 
 /* ================= FIREBASE CONFIG ================= */
 
-// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "AIzaSyD5KEHL9H9jR8rzoUc9CLndpmrEQcuw23w",
+  apiKey: "AIzaSyD5KEHL9H9jR8rzoUc9CLndpmrEQcuw23",
   authDomain: "lg-management-ed8a2.firebaseapp.com",
   projectId: "lg-management-ed8a2",
   storageBucket: "lg-management-ed8a2.firebasestorage.app",
@@ -19,39 +20,101 @@ firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
 const auth = firebase.auth();
-// ================= ADMIN =================
-const ADMIN_EMAIL = "ansarisaifulansari004@gmail.com";
+
+
+/* ================= ADMIN ================= */
+
+/*
+  This email is permanently treated as Admin.
+  Other users get their role from Firestore.
+*/
+
+const ADMIN_EMAIL =
+  "ansarisaifulansari004@gmail.com";
+
+
+/* ================= GLOBAL VARIABLES ================= */
+
+const $ = (id) =>
+  document.getElementById(id);
+
+let students = [];
+
+let currentRole = "Student";
+
+let currentProfile = null;
+
+
+/* ================= ROLE FUNCTIONS ================= */
 
 function isAdmin() {
-    const user = firebase.auth().currentUser;
-    return user && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+
+  const user =
+    auth.currentUser;
+
+  if (!user) {
+    return false;
+  }
+
+  return (
+    (
+      user.email || ""
+    ).toLowerCase() ===
+    ADMIN_EMAIL.toLowerCase()
+  ) ||
+  String(currentRole).toLowerCase() ===
+    "admin";
 }
 
 
-const $ = (id) => document.getElementById(id);
+function isTeacher() {
 
-let students = [];
-let currentRole = "Student";
-let currentProfile = null;
+  return (
+    String(currentRole).toLowerCase() ===
+    "teacher"
+  );
+
+}
+
+
+function isStudent() {
+
+  return (
+    String(currentRole).toLowerCase() ===
+    "student"
+  );
+
+}
 
 
 /* ================= HELPERS ================= */
 
-function showMessage(id, text, type = "") {
+function showMessage(
+  id,
+  text,
+  type = ""
+) {
 
   const el = $(id);
 
-  if (!el) return;
+  if (!el) {
+    return;
+  }
 
-  el.className = "message " + type;
-  el.textContent = text || "";
+  el.className =
+    "message " + type;
+
+  el.textContent =
+    text || "";
 
 }
 
 
 function safe(value) {
 
-  return String(value ?? "").replace(
+  return String(
+    value ?? ""
+  ).replace(
     /[&<>"']/g,
     (char) => ({
       "&": "&amp;",
@@ -65,7 +128,9 @@ function safe(value) {
 }
 
 
-/* ================= SHOW APP ================= */
+/* =========================================================
+   SHOW APP
+   ========================================================= */
 
 function showApp(
   userName = "User",
@@ -73,23 +138,36 @@ function showApp(
   role = "Student"
 ) {
 
-  currentRole = role;
+  currentRole =
+    role || "Student";
 
   $("currentUserName").textContent =
-    userName || email || "User";
+    userName ||
+    email ||
+    "User";
 
   $("profileName").textContent =
-    userName || "Student User";
+    userName ||
+    "Student User";
 
   $("profileEmail").textContent =
-    email || "-";
+    email ||
+    "-";
 
   $("profileRole").textContent =
-    role;
+    currentRole;
 
-  $("loginPage").classList.add("hidden");
 
-  $("app").classList.remove("hidden");
+  $("loginPage")
+    .classList
+    .add("hidden");
+
+  $("app")
+    .classList
+    .remove("hidden");
+
+
+  updateRoleUI();
 
   openPage("dashboard");
 
@@ -98,83 +176,171 @@ function showApp(
 }
 
 
-/* ================= SHOW LOGIN ================= */
+/* =========================================================
+   ROLE UI
+   ========================================================= */
+
+function updateRoleUI() {
+
+  const admin =
+    isAdmin();
+
+
+  /*
+    All buttons having data-page="add"
+    will be visible only to Admin.
+  */
+
+  document
+    .querySelectorAll(
+      '[data-page="add"]'
+    )
+    .forEach(
+      (button) => {
+
+        button.style.display =
+          admin ? "" : "none";
+
+      }
+    );
+
+
+  /*
+    Add Student page itself
+    is also Admin-only.
+  */
+
+  const addPage =
+    $("add");
+
+  if (addPage) {
+
+    addPage.style.display =
+      admin ? "" : "none";
+
+  }
+
+
+  /*
+    Delete buttons are Admin-only.
+  */
+
+  document
+    .querySelectorAll(
+      "[data-delete]"
+    )
+    .forEach(
+      (button) => {
+
+        button.style.display =
+          admin ? "" : "none";
+
+      }
+    );
+
+}
+
+
+/* =========================================================
+   SHOW LOGIN
+   ========================================================= */
 
 function showLoginPage() {
 
-  $("app").classList.add("hidden");
+  $("app")
+    .classList
+    .add("hidden");
 
-  $("loginPage").classList.remove("hidden");
+  $("loginPage")
+    .classList
+    .remove("hidden");
 
   showLoginSection();
 
 }
 
 
-/* ================= LOGIN SECTION ================= */
+/* =========================================================
+   LOGIN SECTION
+   ========================================================= */
 
 function showLoginSection() {
 
-  $("loginSection").classList.remove(
-    "hidden-section"
-  );
+  $("loginSection")
+    .classList
+    .remove("hidden-section");
 
-  $("createSection").classList.add(
-    "hidden-section"
-  );
+  $("createSection")
+    .classList
+    .add("hidden-section");
 
-  $("forgotSection").classList.add(
-    "hidden-section"
-  );
+  $("forgotSection")
+    .classList
+    .add("hidden-section");
 
-  $("showLogin").classList.add("active");
+  $("showLogin")
+    .classList
+    .add("active");
 
-  $("showCreate").classList.remove("active");
+  $("showCreate")
+    .classList
+    .remove("active");
 
 }
 
 
-/* ================= CREATE SECTION ================= */
+/* =========================================================
+   CREATE SECTION
+   ========================================================= */
 
 function showCreateSection() {
 
-  $("loginSection").classList.add(
-    "hidden-section"
-  );
+  $("loginSection")
+    .classList
+    .add("hidden-section");
 
-  $("createSection").classList.remove(
-    "hidden-section"
-  );
+  $("createSection")
+    .classList
+    .remove("hidden-section");
 
-  $("forgotSection").classList.add(
-    "hidden-section"
-  );
+  $("forgotSection")
+    .classList
+    .add("hidden-section");
 
-  $("showCreate").classList.add("active");
+  $("showCreate")
+    .classList
+    .add("active");
 
-  $("showLogin").classList.remove("active");
+  $("showLogin")
+    .classList
+    .remove("active");
 
 }
 
 
-/* ================= FORGOT SECTION ================= */
+/* =========================================================
+   FORGOT SECTION
+   ========================================================= */
 
 function showForgotSection() {
 
-  $("loginSection").classList.add(
-    "hidden-section"
-  );
+  $("loginSection")
+    .classList
+    .add("hidden-section");
 
-  $("createSection").classList.add(
-    "hidden-section"
-  );
+  $("createSection")
+    .classList
+    .add("hidden-section");
 
-  $("forgotSection").classList.remove(
-    "hidden-section"
-  );
+  $("forgotSection")
+    .classList
+    .remove("hidden-section");
+
 
   const typedEmail =
-    $("userId").value.trim();
+    $("userId")
+      .value
+      .trim();
 
   if (typedEmail) {
 
@@ -182,6 +348,7 @@ function showForgotSection() {
       typedEmail;
 
   }
+
 
   showMessage(
     "forgotMessage",
@@ -191,494 +358,650 @@ function showForgotSection() {
 }
 
 
-/* ================= LOGIN / CREATE TABS ================= */
+/* =========================================================
+   LOGIN / CREATE TABS
+   ========================================================= */
 
-$("showLogin").addEventListener(
-  "click",
-  showLoginSection
-);
-
-
-$("showCreate").addEventListener(
-  "click",
-  showCreateSection
-);
+$("showLogin")
+  .addEventListener(
+    "click",
+    showLoginSection
+  );
 
 
-$("forgotPasswordBtn").addEventListener(
-  "click",
-  showForgotSection
-);
+$("showCreate")
+  .addEventListener(
+    "click",
+    showCreateSection
+  );
 
 
-$("backToLogin").addEventListener(
-  "click",
-  showLoginSection
-);
+$("forgotPasswordBtn")
+  .addEventListener(
+    "click",
+    showForgotSection
+  );
 
 
-/* ================= PASSWORD SHOW / HIDE ================= */
-
-$("togglePassword").addEventListener(
-  "click",
-  function () {
-
-    const input =
-      $("password");
-
-    if (input.type === "password") {
-
-      input.type = "text";
-
-      this.textContent = "🙈";
-
-    } else {
-
-      input.type = "password";
-
-      this.textContent = "👁";
-
-    }
-
-  }
-);
+$("backToLogin")
+  .addEventListener(
+    "click",
+    showLoginSection
+  );
 
 
-/* ================= FORGOT PASSWORD ================= */
+/* =========================================================
+   PASSWORD SHOW / HIDE
+   ========================================================= */
 
-$("forgotForm").addEventListener(
-  "submit",
-  async function (event) {
+$("togglePassword")
+  .addEventListener(
+    "click",
+    function () {
 
-    event.preventDefault();
-
-    const email =
-      $("resetEmail")
-        .value
-        .trim()
-        .toLowerCase();
-
-    if (!email) {
-
-      showMessage(
-        "forgotMessage",
-        "Please enter your email.",
-        "error"
-      );
-
-      return;
-
-    }
-
-    showMessage(
-      "forgotMessage",
-      "Sending reset link...",
-      "info"
-    );
-
-    try {
-
-      await auth.sendPasswordResetEmail(
-        email
-      );
-
-      showMessage(
-        "forgotMessage",
-        "Reset link sent! Check your email inbox/spam folder.",
-        "success"
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Password reset error:",
-        error
-      );
-
-      let msg =
-        "Could not send reset link.";
+      const input =
+        $("password");
 
       if (
-        error.code ===
-        "auth/user-not-found"
+        input.type ===
+        "password"
       ) {
 
-        msg =
-          "No account found with this email.";
+        input.type =
+          "text";
 
-      } else if (
-        error.code ===
-        "auth/invalid-email"
-      ) {
+        this.textContent =
+          "🙈";
 
-        msg =
-          "Please enter a valid email.";
+      } else {
 
-      } else if (
-        error.code ===
-        "auth/too-many-requests"
-      ) {
+        input.type =
+          "password";
 
-        msg =
-          "Too many attempts. Please try again later.";
+        this.textContent =
+          "👁";
 
       }
 
-      showMessage(
-        "forgotMessage",
-        msg,
-        "error"
-      );
-
     }
-
-  }
-);
+  );
 
 
-/* ================= CREATE ACCOUNT ================= */
+/* =========================================================
+   FORGOT PASSWORD
+   ========================================================= */
 
-$("createAccountForm").addEventListener(
-  "submit",
-  async function (event) {
+$("forgotForm")
+  .addEventListener(
+    "submit",
+    async function (event) {
 
-    event.preventDefault();
+      event.preventDefault();
 
-    const name =
-      $("createName")
-        .value
-        .trim();
 
-    const email =
-      $("createEmail")
-        .value
-        .trim()
-        .toLowerCase();
+      const email =
+        $("resetEmail")
+          .value
+          .trim()
+          .toLowerCase();
 
-    const password =
-      $("createPassword")
-        .value
-        .trim();
 
-    showMessage(
-      "createError",
-      ""
-    );
+      if (!email) {
 
-    if (
-      !name ||
-      !email ||
-      !password
-    ) {
-
-      showMessage(
-        "createError",
-        "Please fill all details.",
-        "error"
-      );
-
-      return;
-
-    }
-
-    if (password.length < 6) {
-
-      showMessage(
-        "createError",
-        "Password must be at least 6 characters.",
-        "error"
-      );
-
-      return;
-
-    }
-
-    showMessage(
-      "createError",
-      "Creating account...",
-      "info"
-    );
-
-    try {
-
-      const credential =
-        await auth.createUserWithEmailAndPassword(
-          email,
-          password
+        showMessage(
+          "forgotMessage",
+          "Please enter your email.",
+          "error"
         );
 
-      const user =
-        credential.user;
-
-      await db
-        .collection("users")
-        .doc(user.uid)
-        .set({
-
-          name: name,
-
-          email: email,
-
-          role: "Student",
-
-          createdAt:
-            firebase.firestore.FieldValue
-              .serverTimestamp()
-
-        });
-
-      await user.updateProfile({
-
-        displayName: name
-
-      });
-
-      showMessage(
-        "createError",
-        "Account created successfully! 🎉",
-        "success"
-      );
-
-      setTimeout(
-        () => {
-
-          $("createAccountForm").reset();
-
-          $("userId").value =
-            email;
-
-          $("password").value =
-            "";
-
-          showLoginSection();
-
-        },
-        1000
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Create account error:",
-        error
-      );
-
-      let msg =
-        error.message;
-
-      if (
-        error.code ===
-        "auth/email-already-in-use"
-      ) {
-
-        msg =
-          "This email is already registered.";
-
-      } else if (
-        error.code ===
-        "auth/invalid-email"
-      ) {
-
-        msg =
-          "Please enter a valid email.";
-
-      } else if (
-        error.code ===
-        "auth/weak-password"
-      ) {
-
-        msg =
-          "Password is too weak. Use at least 6 characters.";
+        return;
 
       }
 
-      showMessage(
-        "createError",
-        msg,
-        "error"
-      );
-
-    }
-
-  }
-);
-
-
-/* ================= LOGIN ================= */
-
-$("loginForm").addEventListener(
-  "submit",
-  async function (event) {
-
-    event.preventDefault();
-
-    const email =
-      $("userId")
-        .value
-        .trim()
-        .toLowerCase();
-
-    const password =
-      $("password")
-        .value
-        .trim();
-
-    const role =
-      $("role").value;
-
-    showMessage(
-      "loginError",
-      ""
-    );
-
-    if (
-      !email ||
-      !password
-    ) {
 
       showMessage(
-        "loginError",
-        "Enter email and password.",
-        "error"
+        "forgotMessage",
+        "Sending reset link...",
+        "info"
       );
 
-      return;
-
-    }
-
-    showMessage(
-      "loginError",
-      "Signing in...",
-      "info"
-    );
-
-    try {
-
-      const credential =
-        await auth.signInWithEmailAndPassword(
-          email,
-          password
-        );
-
-      const user =
-        credential.user;
-
-      let name =
-        user.displayName ||
-        "Student User";
 
       try {
 
-        const profileDoc =
-          await db
-            .collection("users")
-            .doc(user.uid)
-            .get();
+        await auth
+          .sendPasswordResetEmail(
+            email
+          );
 
-        if (profileDoc.exists) {
 
-          const data =
-            profileDoc.data();
+        showMessage(
+          "forgotMessage",
+          "Reset link sent! Check your email inbox/spam folder.",
+          "success"
+        );
 
-          name =
-            data.name ||
-            name;
+
+      } catch (error) {
+
+        console.error(
+          "Password reset error:",
+          error
+        );
+
+
+        let msg =
+          "Could not send reset link.";
+
+
+        if (
+          error.code ===
+          "auth/user-not-found"
+        ) {
+
+          msg =
+            "No account found with this email.";
 
         }
 
-      } catch (profileError) {
 
-        console.warn(
-          "Profile read failed:",
-          profileError
+        else if (
+          error.code ===
+          "auth/invalid-email"
+        ) {
+
+          msg =
+            "Please enter a valid email.";
+
+        }
+
+
+        else if (
+          error.code ===
+          "auth/too-many-requests"
+        ) {
+
+          msg =
+            "Too many attempts. Please try again later.";
+
+        }
+
+
+        else if (
+          error.code ===
+          "auth/operation-not-allowed"
+        ) {
+
+          msg =
+            "Password reset is not enabled in Firebase Authentication.";
+
+        }
+
+
+        showMessage(
+          "forgotMessage",
+          msg,
+          "error"
         );
 
       }
 
-      sessionStorage.setItem(
-        "studenthub_role",
-        role
+    }
+  );
+
+
+/* =========================================================
+   CREATE ACCOUNT
+   ========================================================= */
+
+$("createAccountForm")
+  .addEventListener(
+    "submit",
+    async function (event) {
+
+      event.preventDefault();
+
+
+      const name =
+        $("createName")
+          .value
+          .trim();
+
+
+      const email =
+        $("createEmail")
+          .value
+          .trim()
+          .toLowerCase();
+
+
+      const password =
+        $("createPassword")
+          .value
+          .trim();
+
+
+      showMessage(
+        "createError",
+        ""
       );
+
+
+      if (
+        !name ||
+        !email ||
+        !password
+      ) {
+
+        showMessage(
+          "createError",
+          "Please fill all details.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      if (
+        password.length < 6
+      ) {
+
+        showMessage(
+          "createError",
+          "Password must be at least 6 characters.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      showMessage(
+        "createError",
+        "Creating account...",
+        "info"
+      );
+
+
+      try {
+
+        const credential =
+          await auth
+            .createUserWithEmailAndPassword(
+              email,
+              password
+            );
+
+
+        const user =
+          credential.user;
+
+
+        /*
+          Every newly created account
+          starts as Student.
+          
+          Admin/Teacher roles will be
+          assigned separately by Admin.
+        */
+
+        await db
+          .collection("users")
+          .doc(user.uid)
+          .set({
+
+            name: name,
+
+            email: email,
+
+            role: "Student",
+
+            createdAt:
+              firebase.firestore
+                .FieldValue
+                .serverTimestamp()
+
+          });
+
+
+        await user
+          .updateProfile({
+
+            displayName:
+              name
+
+          });
+
+
+        showMessage(
+          "createError",
+          "Account created successfully! 🎉",
+          "success"
+        );
+
+
+        setTimeout(
+          () => {
+
+            $("createAccountForm")
+              .reset();
+
+            $("userId").value =
+              email;
+
+            $("password").value =
+              "";
+
+            showLoginSection();
+
+          },
+          1000
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "Create account error:",
+          error
+        );
+
+
+        let msg =
+          error.message;
+
+
+        if (
+          error.code ===
+          "auth/email-already-in-use"
+        ) {
+
+          msg =
+            "This email is already registered.";
+
+        }
+
+
+        else if (
+          error.code ===
+          "auth/invalid-email"
+        ) {
+
+          msg =
+            "Please enter a valid email.";
+
+        }
+
+
+        else if (
+          error.code ===
+          "auth/weak-password"
+        ) {
+
+          msg =
+            "Password is too weak. Use at least 6 characters.";
+
+        }
+
+
+        showMessage(
+          "createError",
+          msg,
+          "error"
+        );
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   LOGIN
+   ========================================================= */
+
+$("loginForm")
+  .addEventListener(
+    "submit",
+    async function (event) {
+
+      event.preventDefault();
+
+
+      const email =
+        $("userId")
+          .value
+          .trim()
+          .toLowerCase();
+
+
+      const password =
+        $("password")
+          .value
+          .trim();
+
+
+      /*
+        IMPORTANT:
+        We DO NOT trust the role dropdown.
+
+        Real role comes from:
+        Firestore -> users -> UID -> role
+      */
+
 
       showMessage(
         "loginError",
         ""
       );
 
-      showApp(
-        name,
-        user.email,
-        role
-      );
-
-    } catch (error) {
-
-      console.error(
-        "Login error:",
-        error
-      );
-
-      let msg =
-        "Invalid email or password.";
 
       if (
-        error.code ===
-        "auth/user-not-found"
+        !email ||
+        !password
       ) {
 
-        msg =
-          "Account not found.";
+        showMessage(
+          "loginError",
+          "Enter email and password.",
+          "error"
+        );
+
+        return;
 
       }
 
-      if (
-        error.code ===
-        "auth/wrong-password"
-      ) {
-
-        msg =
-          "Wrong password.";
-
-      }
-
-      if (
-        error.code ===
-        "auth/invalid-credential"
-      ) {
-
-        msg =
-          "Invalid email or password.";
-
-      }
-
-      if (
-        error.code ===
-        "auth/too-many-requests"
-      ) {
-
-        msg =
-          "Too many attempts. Try again later.";
-
-      }
 
       showMessage(
         "loginError",
-        msg,
-        "error"
+        "Signing in...",
+        "info"
       );
 
+
+      try {
+
+        const credential =
+          await auth
+            .signInWithEmailAndPassword(
+              email,
+              password
+            );
+
+
+        const user =
+          credential.user;
+
+
+        let name =
+          user.displayName ||
+          "Student User";
+
+
+        let role =
+          "Student";
+
+
+        /*
+          Get actual role
+          from Firestore.
+        */
+
+        try {
+
+          const profileDoc =
+            await db
+              .collection("users")
+              .doc(user.uid)
+              .get();
+
+
+          if (
+            profileDoc.exists
+          ) {
+
+            const data =
+              profileDoc.data();
+
+
+            name =
+              data.name ||
+              name;
+
+
+            role =
+              data.role ||
+              "Student";
+
+          }
+
+        } catch (
+          profileError
+        ) {
+
+          console.warn(
+            "Profile read failed:",
+            profileError
+          );
+
+        }
+
+
+        /*
+          Main Admin email is ALWAYS Admin.
+        */
+
+        if (
+          user.email &&
+          user.email
+            .toLowerCase() ===
+            ADMIN_EMAIL
+              .toLowerCase()
+        ) {
+
+          role =
+            "Admin";
+
+        }
+
+
+        showMessage(
+          "loginError",
+          ""
+        );
+
+
+        showApp(
+          name,
+          user.email,
+          role
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "Login error:",
+          error
+        );
+
+
+        let msg =
+          "Invalid email or password.";
+
+
+        if (
+          error.code ===
+          "auth/user-not-found"
+        ) {
+
+          msg =
+            "Account not found.";
+
+        }
+
+
+        if (
+          error.code ===
+          "auth/wrong-password"
+        ) {
+
+          msg =
+            "Wrong password.";
+
+        }
+
+
+        if (
+          error.code ===
+          "auth/invalid-credential"
+        ) {
+
+          msg =
+            "Invalid email or password.";
+
+        }
+
+
+        if (
+          error.code ===
+          "auth/too-many-requests"
+        ) {
+
+          msg =
+            "Too many attempts. Try again later.";
+
+        }
+
+
+        showMessage(
+          "loginError",
+          msg,
+          "error"
+        );
+
+      }
+
     }
-
-  }
-);
+  );
 
 
-/* ================= FIREBASE AUTH STATE ================= */
+/* =========================================================
+   FIREBASE AUTH STATE
+   ========================================================= */
 
 auth.onAuthStateChanged(
   async (user) => {
 
     if (!user) {
+
+      currentRole =
+        "Student";
+
+      currentProfile =
+        null;
 
       showLoginPage();
 
@@ -686,15 +1009,15 @@ auth.onAuthStateChanged(
 
     }
 
+
     let name =
       user.displayName ||
       "Student User";
 
+
     let role =
-      sessionStorage.getItem(
-        "studenthub_role"
-      ) ||
       "Student";
+
 
     try {
 
@@ -704,18 +1027,21 @@ auth.onAuthStateChanged(
           .doc(user.uid)
           .get();
 
+
       if (doc.exists) {
 
         const data =
           doc.data();
 
+
         name =
           data.name ||
           name;
 
+
         role =
           data.role ||
-          role;
+          "Student";
 
       }
 
@@ -728,6 +1054,43 @@ auth.onAuthStateChanged(
 
     }
 
+
+    /*
+      Main Admin account
+      always remains Admin.
+    */
+
+    if (
+      user.email &&
+      user.email
+        .toLowerCase() ===
+        ADMIN_EMAIL
+          .toLowerCase()
+    ) {
+
+      role =
+        "Admin";
+
+    }
+
+
+    currentProfile = {
+
+      uid:
+        user.uid,
+
+      email:
+        user.email || "",
+
+      name:
+        name,
+
+      role:
+        role
+
+    };
+
+
     showApp(
       name,
       user.email,
@@ -738,7 +1101,9 @@ auth.onAuthStateChanged(
 );
 
 
-/* ================= MENU ================= */
+/* =========================================================
+   MENU
+   ========================================================= */
 
 const menuBtn =
   $("menuBtn");
@@ -752,69 +1117,75 @@ const overlay =
 
 function openMenu() {
 
-  sidebar.classList.add(
-    "open"
-  );
+  sidebar
+    .classList
+    .add("open");
 
-  overlay.classList.add(
-    "show"
-  );
+  overlay
+    .classList
+    .add("show");
 
 }
 
 
 function closeMenu() {
 
-  sidebar.classList.remove(
-    "open"
-  );
+  sidebar
+    .classList
+    .remove("open");
 
-  overlay.classList.remove(
-    "show"
-  );
+  overlay
+    .classList
+    .remove("show");
 
 }
 
 
-menuBtn.addEventListener(
-  "click",
-  () => {
+menuBtn
+  .addEventListener(
+    "click",
+    () => {
 
-    sidebar.classList.toggle(
-      "open"
-    );
+      sidebar
+        .classList
+        .toggle("open");
 
-    overlay.classList.toggle(
-      "show"
-    );
-
-  }
-);
-
-
-overlay.addEventListener(
-  "click",
-  closeMenu
-);
-
-
-document.addEventListener(
-  "keydown",
-  (event) => {
-
-    if (
-      event.key === "Escape"
-    ) {
-
-      closeMenu();
+      overlay
+        .classList
+        .toggle("show");
 
     }
-
-  }
-);
+  );
 
 
-/* ================= PAGE NAVIGATION ================= */
+overlay
+  .addEventListener(
+    "click",
+    closeMenu
+  );
+
+
+document
+  .addEventListener(
+    "keydown",
+    (event) => {
+
+      if (
+        event.key ===
+        "Escape"
+      ) {
+
+        closeMenu();
+
+      }
+
+    }
+  );
+
+
+/* =========================================================
+   PAGE NAVIGATION
+   ========================================================= */
 
 const titles = {
 
@@ -866,51 +1237,88 @@ const titles = {
 };
 
 
+/* =========================================================
+   OPEN PAGE
+   ========================================================= */
+
 function openPage(page) {
+
+  /*
+    ONLY ADMIN CAN OPEN ADD STUDENT.
+  */
+
+  if (
+    page === "add" &&
+    !isAdmin()
+  ) {
+
+    alert(
+      "Only Admin can add students."
+    );
+
+    return;
+
+  }
+
 
   document
     .querySelectorAll(".page")
     .forEach(
       (section) => {
 
-        section.classList.remove(
-          "active"
-        );
+        section
+          .classList
+          .remove("active");
 
       }
     );
 
+
   const target =
     $(page);
 
-  if (!target) return;
 
-  target.classList.add(
-    "active"
-  );
+  if (!target) {
+    return;
+  }
+
+
+  target
+    .classList
+    .add("active");
+
 
   document
     .querySelectorAll(".nav-item")
     .forEach(
       (button) => {
 
-        button.classList.toggle(
-          "active",
-          button.dataset.page === page
-        );
+        button
+          .classList
+          .toggle(
+            "active",
+            button.dataset.page ===
+              page
+          );
 
       }
     );
 
-  if (titles[page]) {
 
-    $("pageTitle").textContent =
-      titles[page][0];
+  if (
+    titles[page]
+  ) {
 
-    $("pageSubtitle").textContent =
-      titles[page][1];
+    $("pageTitle")
+      .textContent =
+        titles[page][0];
+
+    $("pageSubtitle")
+      .textContent =
+        titles[page][1];
 
   }
+
 
   if (
     page === "records"
@@ -920,6 +1328,7 @@ function openPage(page) {
 
   }
 
+
   if (
     page === "courses"
   ) {
@@ -927,6 +1336,7 @@ function openPage(page) {
     renderCourses();
 
   }
+
 
   if (
     page === "statistics"
@@ -936,6 +1346,7 @@ function openPage(page) {
 
   }
 
+
   updateDashboard();
 
   closeMenu();
@@ -943,26 +1354,37 @@ function openPage(page) {
 }
 
 
-document.addEventListener(
-  "click",
-  (event) => {
+/* =========================================================
+   NAVIGATION CLICK
+   ========================================================= */
 
-    const button =
-      event.target.closest(
-        "[data-page]"
+document
+  .addEventListener(
+    "click",
+    (event) => {
+
+      const button =
+        event.target.closest(
+          "[data-page]"
+        );
+
+
+      if (!button) {
+        return;
+      }
+
+
+      openPage(
+        button.dataset.page
       );
 
-    if (!button) return;
-
-    openPage(
-      button.dataset.page
-    );
-
-  }
-);
+    }
+  );
 
 
-/* ================= STUDENTS LOAD ================= */
+/* =========================================================
+   LOAD STUDENTS
+   ========================================================= */
 
 async function loadStudents() {
 
@@ -977,6 +1399,7 @@ async function loadStudents() {
         )
         .get();
 
+
     students =
       snapshot.docs.map(
         (doc) => ({
@@ -988,6 +1411,7 @@ async function loadStudents() {
 
         })
       );
+
 
     renderStudents();
 
@@ -1002,6 +1426,7 @@ async function loadStudents() {
       error
     );
 
+
     showMessage(
       "recordsStatus",
       "Firebase data load failed: " +
@@ -1014,129 +1439,164 @@ async function loadStudents() {
 }
 
 
-/* ================= ADD STUDENT ================= */
+/* =========================================================
+   ADD STUDENT
+   ========================================================= */
 
-$("studentForm").addEventListener(
-  "submit",
-  async function (event) {
+$("studentForm")
+  .addEventListener(
+    "submit",
+    async function (event) {
 
-    event.preventDefault();
+      event.preventDefault();
 
-    const student = {
 
-      name:
-        $("studentName")
-          .value
-          .trim(),
+      /*
+        IMPORTANT:
+        Even if someone bypasses the UI,
+        JavaScript will block non-admin users.
+      */
 
-      id:
-        $("studentId")
-          .value
-          .trim(),
-
-      email:
-        $("studentEmail")
-          .value
-          .trim(),
-
-      phone:
-        $("studentPhone")
-          .value
-          .trim(),
-
-      course:
-        $("studentCourse")
-          .value,
-
-      result:
-        $("studentResult")
-          .value,
-
-      createdAt:
-        firebase.firestore
-          .FieldValue
-          .serverTimestamp(),
-
-      createdBy:
-        auth.currentUser
-          ? auth.currentUser.uid
-          : null
-
-    };
-
-    if (
-      !student.name ||
-      !student.id
-    ) {
-
-      alert(
-        "Enter Student Name and Student ID."
-      );
-
-      return;
-
-    }
-
-    try {
-
-      const duplicate =
-        await db
-          .collection("students")
-          .where(
-            "id",
-            "==",
-            student.id
-          )
-          .limit(1)
-          .get();
-
-      if (
-        !duplicate.empty
-      ) {
+      if (!isAdmin()) {
 
         alert(
-          "This Student ID already exists."
+          "Only Admin can add students."
         );
 
         return;
 
       }
 
-      await db
-        .collection("students")
-        .add(student);
 
-      this.reset();
+      const student = {
 
-      await loadStudents();
+        name:
+          $("studentName")
+            .value
+            .trim(),
 
-      alert(
-        "Student added successfully! 🎉\n\n Your data successfuly save."
-      );
+        id:
+          $("studentId")
+            .value
+            .trim(),
 
-      openPage(
-        "records"
-      );
+        email:
+          $("studentEmail")
+            .value
+            .trim(),
 
-    } catch (error) {
+        phone:
+          $("studentPhone")
+            .value
+            .trim(),
 
-      console.error(
-        "Add student error:",
-        error
-      );
+        course:
+          $("studentCourse")
+            .value,
 
-      alert(
-        "Student Firebase me save nahi hua.\n\n" +
-        error.message
-      );
+        result:
+          $("studentResult")
+            .value,
+
+        createdAt:
+          firebase.firestore
+            .FieldValue
+            .serverTimestamp(),
+
+        createdBy:
+          auth.currentUser
+            ? auth.currentUser.uid
+            : null
+
+      };
+
+
+      if (
+        !student.name ||
+        !student.id
+      ) {
+
+        alert(
+          "Enter Student Name and Student ID."
+        );
+
+        return;
+
+      }
+
+
+      try {
+
+        const duplicate =
+          await db
+            .collection("students")
+            .where(
+              "id",
+              "==",
+              student.id
+            )
+            .limit(1)
+            .get();
+
+
+        if (
+          !duplicate.empty
+        ) {
+
+          alert(
+            "This Student ID already exists."
+          );
+
+          return;
+
+        }
+
+
+        await db
+          .collection("students")
+          .add(
+            student
+          );
+
+
+        this.reset();
+
+
+        await loadStudents();
+
+
+        alert(
+          "Student added successfully! 🎉\n\nYour data successfully saved."
+        );
+
+
+        openPage(
+          "records"
+        );
+
+
+      } catch (error) {
+
+        console.error(
+          "Add student error:",
+          error
+        );
+
+
+        alert(
+          "Student Firebase me save nahi hua.\n\n" +
+            error.message
+        );
+
+      }
 
     }
-
-  }
-);
+  );
 
 
-/* ================= RECORDS ================= */
+/* =========================================================
+   RECORDS
+   ========================================================= */
 
 function renderStudents() {
 
@@ -1151,6 +1611,7 @@ function renderStudents() {
       .value
       .trim()
       .toLowerCase();
+
 
   const list =
     students.filter(
@@ -1169,6 +1630,7 @@ function renderStudents() {
           .join(" ")
           .toLowerCase();
 
+
         return text.includes(
           search
         );
@@ -1176,8 +1638,10 @@ function renderStudents() {
       }
     );
 
+
   table.innerHTML =
     "";
+
 
   if (
     list.length === 0
@@ -1190,8 +1654,10 @@ function renderStudents() {
 
   }
 
+
   empty.style.display =
     "none";
+
 
   list.forEach(
     (student, index) => {
@@ -1200,6 +1666,7 @@ function renderStudents() {
         document.createElement(
           "tr"
         );
+
 
       row.innerHTML = `
 
@@ -1248,13 +1715,21 @@ function renderStudents() {
           <button
             class="delete-btn"
             data-delete="${safe(student.firebaseId)}"
+            style="display:${
+              isAdmin()
+                ? ""
+                : "none"
+            }"
           >
+
             Delete
+
           </button>
 
         </td>
 
       `;
+
 
       table.appendChild(
         row
@@ -1264,6 +1739,10 @@ function renderStudents() {
   );
 
 
+  /*
+    Delete buttons
+  */
+
   document
     .querySelectorAll(
       "[data-delete]"
@@ -1271,54 +1750,77 @@ function renderStudents() {
     .forEach(
       (button) => {
 
-        button.addEventListener(
-          "click",
-          async () => {
+        button
+          .addEventListener(
+            "click",
+            async () => {
 
-            const id =
-              button.dataset.delete;
 
-            if (
-              !confirm(
-                "Delete this student permanently?"
-              )
-            ) {
+              /*
+                Extra Admin check.
+              */
 
-              return;
+              if (!isAdmin()) {
 
-            }
+                alert(
+                  "Only Admin can delete students."
+                );
 
-            try {
+                return;
 
-              await db
-                .collection(
-                  "students"
+              }
+
+
+              const id =
+                button.dataset.delete;
+
+
+              if (
+                !confirm(
+                  "Delete this student permanently?"
                 )
-                .doc(id)
-                .delete();
+              ) {
 
-              await loadStudents();
+                return;
 
-              alert(
-                "Student deleted successfully."
-              );
+              }
 
-            } catch (error) {
 
-              console.error(
-                "Delete error:",
-                error
-              );
+              try {
 
-              alert(
-                "Delete failed.\n\n" +
-                error.message
-              );
+                await db
+                  .collection(
+                    "students"
+                  )
+                  .doc(id)
+                  .delete();
+
+
+                await loadStudents();
+
+
+                alert(
+                  "Student deleted successfully."
+                );
+
+
+              } catch (error) {
+
+                console.error(
+                  "Delete error:",
+                  error
+                );
+
+
+                alert(
+                  "Delete failed.\n\n" +
+                    error.message
+                );
+
+              }
 
             }
-
-          }
-        );
+          );
 
       }
     );
@@ -1326,30 +1828,42 @@ function renderStudents() {
 }
 
 
-$("searchInput").addEventListener(
-  "input",
-  renderStudents
-);
+/* =========================================================
+   SEARCH
+   ========================================================= */
+
+$("searchInput")
+  .addEventListener(
+    "input",
+    renderStudents
+  );
 
 
-/* ================= DASHBOARD ================= */
+/* =========================================================
+   DASHBOARD
+   ========================================================= */
 
 function updateDashboard() {
 
   const total =
     students.length;
 
+
   const passed =
     students.filter(
       (s) =>
-        s.result === "Passed"
+        s.result ===
+        "Passed"
     ).length;
+
 
   const failed =
     students.filter(
       (s) =>
-        s.result === "Failed"
+        s.result ===
+        "Failed"
     ).length;
+
 
   const courses =
     new Set(
@@ -1361,31 +1875,46 @@ function updateDashboard() {
         .filter(Boolean)
     ).size;
 
-  $("totalCount").textContent =
-    total;
 
-  $("passedCount").textContent =
-    passed;
+  $("totalCount")
+    .textContent =
+      total;
 
-  $("failedCount").textContent =
-    failed;
 
-  $("courseCount").textContent =
-    courses;
+  $("passedCount")
+    .textContent =
+      passed;
+
+
+  $("failedCount")
+    .textContent =
+      failed;
+
+
+  $("courseCount")
+    .textContent =
+      courses;
+
 
   updateStatistics();
 
 }
 
 
-/* ================= COURSES ================= */
+/* =========================================================
+   COURSES
+   ========================================================= */
 
 function renderCourses() {
 
   const grid =
     $("courseGrid");
 
-  if (!grid) return;
+
+  if (!grid) {
+    return;
+  }
+
 
   const courses = [
 
@@ -1431,8 +1960,10 @@ function renderCourses() {
   grid.innerHTML =
     "";
 
+
   courses.forEach(
     ([name, icon, description]) => {
+
 
       const count =
         students.filter(
@@ -1441,13 +1972,16 @@ function renderCourses() {
             name
         ).length;
 
+
       const card =
         document.createElement(
           "div"
         );
 
+
       card.className =
         "course-card";
+
 
       card.innerHTML = `
 
@@ -1470,6 +2004,7 @@ function renderCourses() {
 
       `;
 
+
       grid.appendChild(
         card
       );
@@ -1480,121 +2015,140 @@ function renderCourses() {
 }
 
 
-/* ================= STATISTICS ================= */
+/* =========================================================
+   STATISTICS
+   ========================================================= */
 
 function updateStatistics() {
 
   const total =
     students.length;
 
+
   const passed =
     students.filter(
       (s) =>
-        s.result === "Passed"
+        s.result ===
+        "Passed"
     ).length;
+
 
   const failed =
     students.filter(
       (s) =>
-        s.result === "Failed"
+        s.result ===
+        "Failed"
     ).length;
+
 
   const passedPercent =
     total
       ? Math.round(
-          (passed / total) * 100
+          (passed / total) *
+            100
         )
       : 0;
+
 
   const failedPercent =
     total
       ? Math.round(
-          (failed / total) * 100
+          (failed / total) *
+            100
         )
       : 0;
 
-  $("passedPercent").textContent =
-    passedPercent + "%";
 
-  $("failedPercent").textContent =
-    failedPercent + "%";
+  $("passedPercent")
+    .textContent =
+      passedPercent +
+      "%";
 
-  $("passedBar").style.width =
-    passedPercent + "%";
 
-  $("failedBar").style.width =
-    failedPercent + "%";
+  $("failedPercent")
+    .textContent =
+      failedPercent +
+      "%";
 
-  $("statTotal").textContent =
-    total;
 
-  $("statPassed").textContent =
-    passed;
+  $("passedBar")
+    .style.width =
+      passedPercent +
+      "%";
 
-  $("statFailed").textContent =
-    failed;
+
+  $("failedBar")
+    .style.width =
+      failedPercent +
+      "%";
+
+
+  $("statTotal")
+    .textContent =
+      total;
+
+
+  $("statPassed")
+    .textContent =
+      passed;
+
+
+  $("statFailed")
+    .textContent =
+      failed;
 
 }
 
 
-/* ================= LOGOUT ================= */
+/* =========================================================
+   LOGOUT
+   ========================================================= */
 
-$("logout").addEventListener(
-  "click",
-  async () => {
+$("logout")
+  .addEventListener(
+    "click",
+    async () => {
 
-    try {
+      try {
 
-      sessionStorage.removeItem(
-        "studenthub_role"
-      );
+        currentRole =
+          "Student";
 
-      await auth.signOut();
-
-    } catch (error) {
-
-      console.error(
-        "Logout error:",
-        error
-      );
-
-    }
-
-    $("loginForm").reset();
-
-    $("forgotForm").reset();
-
-    showLoginPage();
-
-  }
-);
+        currentProfile =
+          null;
 
 
-/* ================= START ================= */
-function updateAdminUI() {
+        await auth.signOut();
 
-    const addStudentButtons =
-        document.querySelectorAll(
-            '[data-page="add"]'
+
+      } catch (error) {
+
+        console.error(
+          "Logout error:",
+          error
         );
 
-    const admin =
-        isAdmin();
+      }
 
-    addStudentButtons.forEach(
-        button => {
 
-            button.style.display =
-                admin ? "" : "none";
+      $("loginForm")
+        .reset();
 
-        }
-    );
 
-}
+      $("forgotForm")
+        .reset();
+
+
+      showLoginPage();
+
+    }
+  );
+
+
+/* =========================================================
+   START
+   ========================================================= */
 
 renderCourses();
 
 updateDashboard();
-setTimeout(function () {
-    updateAdminUI();
-}, 1000);
