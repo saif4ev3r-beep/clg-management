@@ -282,7 +282,7 @@ $("createAccountForm").addEventListener(
 
 $("loginForm").addEventListener(
     "submit",
-    function(event) {
+    async function(event) {
 
         event.preventDefault();
 
@@ -301,28 +301,28 @@ $("loginForm").addEventListener(
             $("loginError");
 
 
-        const admin =
-            user === "admin" &&
-            password === "1234";
+      const admin =
+    user === "admin" &&
+    password === "1234";
 
+if (!admin) {
 
-        const account =
-            accounts.find(
-                item =>
-                    item.email === user &&
-                    item.password === password
+    try {
+
+        await firebase.auth()
+            .signInWithEmailAndPassword(
+                user,
+                password
             );
 
+    } catch (firebaseError) {
 
-        if (!admin && !account) {
+        error.textContent =
+            "Invalid Email or Password.";
 
-            error.textContent =
-                "Invalid User ID/Email or Password.";
-
-            return;
-
-        }
-
+        return;
+    }
+}
 
         error.textContent = "";
 
