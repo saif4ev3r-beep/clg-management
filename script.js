@@ -19,6 +19,13 @@ firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
 const auth = firebase.auth();
+// ================= ADMIN =================
+const ADMIN_EMAIL = "ansarisaifulansari004@gmail.com";
+
+function isAdmin() {
+    const user = firebase.auth().currentUser;
+    return user && user.email.toLowerCase() === ADMIN_EMAIL.toLowerCase();
+}
 
 
 const $ = (id) => document.getElementById(id);
