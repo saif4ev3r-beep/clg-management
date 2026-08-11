@@ -1,1338 +1,1567 @@
 /* =========================================================
-   STUDENTHUB - FIREBASE JAVASCRIPT
+   STUDENTHUB - WORKING FIREBASE VERSION
    ========================================================= */
 
 /* ================= FIREBASE CONFIG ================= */
 
 const firebaseConfig = {
-    apiKey: "AIzaSyD5KEHL9H9jR8rz0Uc9CLndpmrEQcuw23w",
-    authDomain: "lg-management-ed8a2.firebaseapp.com",
-    projectId: "lg-management-ed8a2",
-    storageBucket: "lg-management-ed8a2.firebasestorage.app",
-    messagingSenderId: "455533514999",
-    appId: "1:455533514999:web:6b74d10745a6b25be183f2"
+  apiKey: "AIzaSyD5KEHL9H9jR8rz0Uc9CLndpmrEQcuw23w",
+  authDomain: "lg-management-ed8a2.firebaseapp.com",
+  projectId: "lg-management-ed8a2",
+  storageBucket: "lg-management-ed8a2.firebasestorage.app",
+  messagingSenderId: "455533514999",
+  appId: "1:455533514999:web:6b74d10745a6b25be183f2"
 };
 
 firebase.initializeApp(firebaseConfig);
 
 const db = firebase.firestore();
+const auth = firebase.auth();
 
 const $ = (id) => document.getElementById(id);
 
-
-/* ================= STUDENTS ================= */
-
 let students = [];
+let currentRole = "Student";
+let currentProfile = null;
 
 
-/* Firebase se students load karo */
+/* ================= HELPERS ================= */
 
-async function loadStudents() {
+function showMessage(id, text, type = "") {
 
-    try {
+  const el = $(id);
 
-        const snapshot = await db
-            .collection("students")
-            .get();
+  if (!el) return;
 
-        students = [];
-
-        snapshot.forEach((doc) => {
-
-            students.push({
-                key: doc.id,
-                firebaseId: doc.id,
-                ...doc.data()
-            });
-
-        });
-
-        renderStudents();
-        updateDashboard();
-
-        console.log("Students loaded from Firebase:", students);
-
-    } catch (error) {
-
-        console.error("Firebase load error:", error);
-
-        alert(
-            "Firebase se data load nahi ho pa raha.\n\n" +
-            "Console me error check karein."
-        );
-
-    }
+  el.className = "message " + type;
+  el.textContent = text || "";
 
 }
 
 
-/* ================= ACCOUNTS ================= */
+function safe(value) {
 
-let accounts = [];
-
-try {
-
-    accounts = JSON.parse(
-        localStorage.getItem("studenthub_accounts") || "[]"
-    );
-
-    if (!Array.isArray(accounts)) {
-        accounts = [];
-    }
-
-} catch {
-
-    accounts = [];
+  return String(value ?? "").replace(
+    /[&<>"']/g,
+    (char) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#039;"
+    }[char])
+  );
 
 }
 
 
-function saveAccounts() {
+/* ================= SHOW APP ================= */
 
-    localStorage.setItem(
-        "studenthub_accounts",
-        JSON.stringify(accounts)
-    );
+function showApp(
+  userName = "User",
+  email = "",
+  role = "Student"
+) {
+
+  currentRole = role;
+
+  $("currentUserName").textContent =
+    userName || email || "User";
+
+  $("profileName").textContent =
+    userName || "Student User";
+
+  $("profileEmail").textContent =
+    email || "-";
+
+  $("profileRole").textContent =
+    role;
+
+  $("loginPage").classList.add("hidden");
+
+  $("app").classList.remove("hidden");
+
+  openPage("dashboard");
+
+  loadStudents();
 
 }
 
 
-/* ================= LOGIN / CREATE ================= */
+/* ================= SHOW LOGIN ================= */
 
-const showLogin = $("showLogin");
-const showCreate = $("showCreate");
+function showLoginPage() {
 
-const loginSection = $("loginSection");
-const createSection = $("createSection");
+  $("app").classList.add("hidden");
 
+  $("loginPage").classList.remove("hidden");
+
+  showLoginSection();
+
+}
+
+
+/* ================= LOGIN SECTION ================= */
 
 function showLoginSection() {
 
-    loginSection.style.display = "block";
-    createSection.style.display = "none";
+  $("loginSection").classList.remove(
+    "hidden-section"
+  );
 
-    showLogin.classList.add("active");
-    showCreate.classList.remove("active");
+  $("createSection").classList.add(
+    "hidden-section"
+  );
+
+  $("forgotSection").classList.add(
+    "hidden-section"
+  );
+
+  $("showLogin").classList.add("active");
+
+  $("showCreate").classList.remove("active");
 
 }
 
+
+/* ================= CREATE SECTION ================= */
 
 function showCreateSection() {
 
-    loginSection.style.display = "none";
-    createSection.style.display = "block";
+  $("loginSection").classList.add(
+    "hidden-section"
+  );
 
-    showCreate.classList.add("active");
-    showLogin.classList.remove("active");
+  $("createSection").classList.remove(
+    "hidden-section"
+  );
+
+  $("forgotSection").classList.add(
+    "hidden-section"
+  );
+
+  $("showCreate").classList.add("active");
+
+  $("showLogin").classList.remove("active");
 
 }
 
 
-showLogin.addEventListener(
-    "click",
-    showLoginSection
+/* ================= FORGOT SECTION ================= */
+
+function showForgotSection() {
+
+  $("loginSection").classList.add(
+    "hidden-section"
+  );
+
+  $("createSection").classList.add(
+    "hidden-section"
+  );
+
+  $("forgotSection").classList.remove(
+    "hidden-section"
+  );
+
+  const typedEmail =
+    $("userId").value.trim();
+
+  if (typedEmail) {
+
+    $("resetEmail").value =
+      typedEmail;
+
+  }
+
+  showMessage(
+    "forgotMessage",
+    ""
+  );
+
+}
+
+
+/* ================= LOGIN / CREATE TABS ================= */
+
+$("showLogin").addEventListener(
+  "click",
+  showLoginSection
 );
 
 
-showCreate.addEventListener(
-    "click",
-    showCreateSection
+$("showCreate").addEventListener(
+  "click",
+  showCreateSection
+);
+
+
+$("forgotPasswordBtn").addEventListener(
+  "click",
+  showForgotSection
+);
+
+
+$("backToLogin").addEventListener(
+  "click",
+  showLoginSection
+);
+
+
+/* ================= PASSWORD SHOW / HIDE ================= */
+
+$("togglePassword").addEventListener(
+  "click",
+  function () {
+
+    const input =
+      $("password");
+
+    if (input.type === "password") {
+
+      input.type = "text";
+
+      this.textContent = "🙈";
+
+    } else {
+
+      input.type = "password";
+
+      this.textContent = "👁";
+
+    }
+
+  }
+);
+
+
+/* ================= FORGOT PASSWORD ================= */
+
+$("forgotForm").addEventListener(
+  "submit",
+  async function (event) {
+
+    event.preventDefault();
+
+    const email =
+      $("resetEmail")
+        .value
+        .trim()
+        .toLowerCase();
+
+    if (!email) {
+
+      showMessage(
+        "forgotMessage",
+        "Please enter your email.",
+        "error"
+      );
+
+      return;
+
+    }
+
+    showMessage(
+      "forgotMessage",
+      "Sending reset link...",
+      "info"
+    );
+
+    try {
+
+      await auth.sendPasswordResetEmail(
+        email
+      );
+
+      showMessage(
+        "forgotMessage",
+        "Reset link sent! Check your email inbox/spam folder.",
+        "success"
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Password reset error:",
+        error
+      );
+
+      let msg =
+        "Could not send reset link.";
+
+      if (
+        error.code ===
+        "auth/user-not-found"
+      ) {
+
+        msg =
+          "No account found with this email.";
+
+      } else if (
+        error.code ===
+        "auth/invalid-email"
+      ) {
+
+        msg =
+          "Please enter a valid email.";
+
+      } else if (
+        error.code ===
+        "auth/too-many-requests"
+      ) {
+
+        msg =
+          "Too many attempts. Please try again later.";
+
+      }
+
+      showMessage(
+        "forgotMessage",
+        msg,
+        "error"
+      );
+
+    }
+
+  }
 );
 
 
 /* ================= CREATE ACCOUNT ================= */
 
 $("createAccountForm").addEventListener(
-    "submit",
-    async unction(event) {
+  "submit",
+  async function (event) {
 
-        event.preventDefault();
+    event.preventDefault();
 
-        const name =
-            $("createName").value.trim();
+    const name =
+      $("createName")
+        .value
+        .trim();
 
-        const email =
-            $("createEmail").value.trim().toLowerCase();
+    const email =
+      $("createEmail")
+        .value
+        .trim()
+        .toLowerCase();
 
-        const password =
-            $("createPassword").value.trim();
+    const password =
+      $("createPassword")
+        .value
+        .trim();
 
-        const error =
-            $("createError");
+    showMessage(
+      "createError",
+      ""
+    );
 
+    if (
+      !name ||
+      !email ||
+      !password
+    ) {
 
-        if (!name || !email || !password) {
+      showMessage(
+        "createError",
+        "Please fill all details.",
+        "error"
+      );
 
-            error.className = "error";
-
-            error.textContent =
-                "Please fill all details.";
-
-            return;
-
-        }
-
-
-        if (!email.includes("@")) {
-
-            error.className = "error";
-
-            error.textContent =
-                "Enter a valid email.";
-
-            return;
-
-        }
-
-
-        if (password.length < 4) {
-
-            error.className = "error";
-
-            error.textContent =
-                "Password must be at least 4 characters.";
-
-            return;
-
-        }
-
-
-        const exists =
-            accounts.some(
-                account =>
-                    account.email === email
-            );
-
-
-        if (exists) {
-
-            error.className = "error";
-
-            error.textContent =
-                "This account already exists.";
-
-            return;
-
-        }
-
-
-     try {
-
-    const userCredential =
-        await firebase.auth().createUserWithEmailAndPassword(
-            email,
-            password
-        );
-
-    const user = userCredential.user;
-
-    await db.collection("users").doc(user.uid).set({
-        name: name,
-        email: email,
-        createdAt: new Date().toISOString()
-    });
-
-    error.className = "success-message";
-
-    error.textContent =
-        "Account created successfully! 🎉";
-
-} catch (firebaseError) {
-
-    error.className = "error";
-
-    error.textContent =
-        firebaseError.message;
-
-    return;
-}
-
-
-        error.className =
-            "success-message";
-
-        error.textContent =
-            "Account created successfully! 🎉";
-
-
-        setTimeout(
-            function() {
-
-                $("userId").value =
-                    email;
-
-                $("password").value =
-                    password;
-
-                $("createAccountForm").reset();
-
-                error.textContent = "";
-
-                showLoginSection();
-
-            },
-            900
-        );
+      return;
 
     }
+
+    if (password.length < 6) {
+
+      showMessage(
+        "createError",
+        "Password must be at least 6 characters.",
+        "error"
+      );
+
+      return;
+
+    }
+
+    showMessage(
+      "createError",
+      "Creating account...",
+      "info"
+    );
+
+    try {
+
+      const credential =
+        await auth.createUserWithEmailAndPassword(
+          email,
+          password
+        );
+
+      const user =
+        credential.user;
+
+      await db
+        .collection("users")
+        .doc(user.uid)
+        .set({
+
+          name: name,
+
+          email: email,
+
+          role: "Student",
+
+          createdAt:
+            firebase.firestore.FieldValue
+              .serverTimestamp()
+
+        });
+
+      await user.updateProfile({
+
+        displayName: name
+
+      });
+
+      showMessage(
+        "createError",
+        "Account created successfully! 🎉",
+        "success"
+      );
+
+      setTimeout(
+        () => {
+
+          $("createAccountForm").reset();
+
+          $("userId").value =
+            email;
+
+          $("password").value =
+            "";
+
+          showLoginSection();
+
+        },
+        1000
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Create account error:",
+        error
+      );
+
+      let msg =
+        error.message;
+
+      if (
+        error.code ===
+        "auth/email-already-in-use"
+      ) {
+
+        msg =
+          "This email is already registered.";
+
+      } else if (
+        error.code ===
+        "auth/invalid-email"
+      ) {
+
+        msg =
+          "Please enter a valid email.";
+
+      } else if (
+        error.code ===
+        "auth/weak-password"
+      ) {
+
+        msg =
+          "Password is too weak. Use at least 6 characters.";
+
+      }
+
+      showMessage(
+        "createError",
+        msg,
+        "error"
+      );
+
+    }
+
+  }
 );
 
 
 /* ================= LOGIN ================= */
 
 $("loginForm").addEventListener(
-    "submit",
-    async function(event) {
+  "submit",
+  async function (event) {
 
-        event.preventDefault();
+    event.preventDefault();
 
-        const user =
-            $("userId")
-                .value
-                .trim()
-                .toLowerCase();
+    const email =
+      $("userId")
+        .value
+        .trim()
+        .toLowerCase();
 
-        const password =
-            $("password")
-                .value
-                .trim();
+    const password =
+      $("password")
+        .value
+        .trim();
 
-        const error =
-            $("loginError");
+    const role =
+      $("role").value;
 
+    showMessage(
+      "loginError",
+      ""
+    );
 
-      const admin =
-    user === "admin" &&
-    password === "1234";
+    if (
+      !email ||
+      !password
+    ) {
 
-if (!admin) {
+      showMessage(
+        "loginError",
+        "Enter email and password.",
+        "error"
+      );
+
+      return;
+
+    }
+
+    showMessage(
+      "loginError",
+      "Signing in...",
+      "info"
+    );
 
     try {
 
-        await firebase.auth()
-            .signInWithEmailAndPassword(
-                user,
-                password
-            );
-
-    } catch (firebaseError) {
-
-        error.textContent =
-            "Invalid Email or Password.";
-
-        return;
-    }
-}
-
-        error.textContent = "";
-
-
-        sessionStorage.setItem(
-            "studenthub_logged_in",
-            "true"
+      const credential =
+        await auth.signInWithEmailAndPassword(
+          email,
+          password
         );
 
+      const user =
+        credential.user;
 
-        $("loginPage")
-            .classList
-            .add("hidden");
+      let name =
+        user.displayName ||
+        "Student User";
 
+      try {
 
-        $("app")
-            .classList
-            .remove("hidden");
+        const profileDoc =
+          await db
+            .collection("users")
+            .doc(user.uid)
+            .get();
 
+        if (profileDoc.exists) {
 
-        openPage("dashboard");
+          const data =
+            profileDoc.data();
 
-        loadStudents();
-
-    }
-);
-
-
-/* ================= PASSWORD ================= */
-
-$("togglePassword").addEventListener(
-    "click",
-    function() {
-
-        const input =
-            $("password");
-
-
-        if (input.type === "password") {
-
-            input.type = "text";
-
-            this.textContent = "🙈";
-
-        } else {
-
-            input.type = "password";
-
-            this.textContent = "👁";
+          name =
+            data.name ||
+            name;
 
         }
 
+      } catch (profileError) {
+
+        console.warn(
+          "Profile read failed:",
+          profileError
+        );
+
+      }
+
+      sessionStorage.setItem(
+        "studenthub_role",
+        role
+      );
+
+      showMessage(
+        "loginError",
+        ""
+      );
+
+      showApp(
+        name,
+        user.email,
+        role
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Login error:",
+        error
+      );
+
+      let msg =
+        "Invalid email or password.";
+
+      if (
+        error.code ===
+        "auth/user-not-found"
+      ) {
+
+        msg =
+          "Account not found.";
+
+      }
+
+      if (
+        error.code ===
+        "auth/wrong-password"
+      ) {
+
+        msg =
+          "Wrong password.";
+
+      }
+
+      if (
+        error.code ===
+        "auth/invalid-credential"
+      ) {
+
+        msg =
+          "Invalid email or password.";
+
+      }
+
+      if (
+        error.code ===
+        "auth/too-many-requests"
+      ) {
+
+        msg =
+          "Too many attempts. Try again later.";
+
+      }
+
+      showMessage(
+        "loginError",
+        msg,
+        "error"
+      );
+
     }
+
+  }
 );
 
 
-/* ================= THREE DOT MENU ================= */
+/* ================= FIREBASE AUTH STATE ================= */
 
-const menuBtn = $("menuBtn");
-const sidebar = $("sidebar");
-const overlay = $("overlay");
+auth.onAuthStateChanged(
+  async (user) => {
+
+    if (!user) {
+
+      showLoginPage();
+
+      return;
+
+    }
+
+    let name =
+      user.displayName ||
+      "Student User";
+
+    let role =
+      sessionStorage.getItem(
+        "studenthub_role"
+      ) ||
+      "Student";
+
+    try {
+
+      const doc =
+        await db
+          .collection("users")
+          .doc(user.uid)
+          .get();
+
+      if (doc.exists) {
+
+        const data =
+          doc.data();
+
+        name =
+          data.name ||
+          name;
+
+        role =
+          data.role ||
+          role;
+
+      }
+
+    } catch (error) {
+
+      console.warn(
+        "Could not load user profile:",
+        error
+      );
+
+    }
+
+    showApp(
+      name,
+      user.email,
+      role
+    );
+
+  }
+);
+
+
+/* ================= MENU ================= */
+
+const menuBtn =
+  $("menuBtn");
+
+const sidebar =
+  $("sidebar");
+
+const overlay =
+  $("overlay");
 
 
 function openMenu() {
 
-    sidebar.classList.add("open");
+  sidebar.classList.add(
+    "open"
+  );
 
-    overlay.classList.add("show");
+  overlay.classList.add(
+    "show"
+  );
 
 }
 
 
 function closeMenu() {
 
-    sidebar.classList.remove("open");
+  sidebar.classList.remove(
+    "open"
+  );
 
-    overlay.classList.remove("show");
+  overlay.classList.remove(
+    "show"
+  );
 
 }
 
 
 menuBtn.addEventListener(
-    "click",
-    function(event) {
+  "click",
+  () => {
 
-        event.stopPropagation();
+    sidebar.classList.toggle(
+      "open"
+    );
 
-        if (
-            sidebar.classList.contains("open")
-        ) {
+    overlay.classList.toggle(
+      "show"
+    );
 
-            closeMenu();
-
-        } else {
-
-            openMenu();
-
-        }
-
-    }
+  }
 );
 
 
 overlay.addEventListener(
-    "click",
-    closeMenu
+  "click",
+  closeMenu
 );
 
 
 document.addEventListener(
-    "keydown",
-    function(event) {
+  "keydown",
+  (event) => {
 
-        if (event.key === "Escape") {
+    if (
+      event.key === "Escape"
+    ) {
 
-            closeMenu();
-
-        }
+      closeMenu();
 
     }
+
+  }
 );
 
 
 /* ================= PAGE NAVIGATION ================= */
 
+const titles = {
+
+  dashboard: [
+    "Dashboard",
+    "Manage your students easily."
+  ],
+
+  profile: [
+    "Profile",
+    "Your StudentHub account."
+  ],
+
+  add: [
+    "Add Student",
+    "Create a new student record."
+  ],
+
+  records: [
+    "Student Records",
+    "View and manage all students."
+  ],
+
+  courses: [
+    "Courses",
+    "Active academic programs."
+  ],
+
+  statistics: [
+    "Statistics",
+    "Student performance overview."
+  ],
+
+  attendance: [
+    "Attendance",
+    "Attendance section."
+  ],
+
+  fees: [
+    "Fees",
+    "Fees management section."
+  ],
+
+  notices: [
+    "Notices",
+    "Important notices."
+  ]
+
+};
+
+
 function openPage(page) {
 
-    document
-        .querySelectorAll(".page")
-        .forEach(
-            pageElement => {
+  document
+    .querySelectorAll(".page")
+    .forEach(
+      (section) => {
 
-                pageElement.classList.remove(
-                    "active"
-                );
-
-            }
+        section.classList.remove(
+          "active"
         );
 
+      }
+    );
 
-    const target = $(page);
+  const target =
+    $(page);
 
+  if (!target) return;
 
-    if (!target) {
-        return;
-    }
+  target.classList.add(
+    "active"
+  );
 
+  document
+    .querySelectorAll(".nav-item")
+    .forEach(
+      (button) => {
 
-    target.classList.add("active");
-
-
-    document
-        .querySelectorAll(".nav-item")
-        .forEach(
-            button => {
-
-                button.classList.toggle(
-                    "active",
-                    button.dataset.page === page
-                );
-
-            }
+        button.classList.toggle(
+          "active",
+          button.dataset.page === page
         );
 
+      }
+    );
 
-    const titles = {
+  if (titles[page]) {
 
-        dashboard: [
-            "Dashboard",
-            "Manage your students easily."
-        ],
+    $("pageTitle").textContent =
+      titles[page][0];
 
-        add: [
-            "Add Student",
-            "Create a new student record."
-        ],
+    $("pageSubtitle").textContent =
+      titles[page][1];
 
-        records: [
-            "Student Records",
-            "View and manage all students."
-        ],
+  }
 
-        courses: [
-            "Courses",
-            "Active academic programs."
-        ],
+  if (
+    page === "records"
+  ) {
 
-        statistics: [
-            "Statistics",
-            "Student performance overview."
-        ],
+    renderStudents();
 
-        profile: [
-            "Profile",
-            "Student profile section."
-        ],
+  }
 
-        attendance: [
-            "Attendance",
-            "Attendance section."
-        ],
+  if (
+    page === "courses"
+  ) {
 
-        fees: [
-            "Fees",
-            "Fees management section."
-        ],
+    renderCourses();
 
-        notices: [
-            "Notices",
-            "Important notices."
-        ]
+  }
 
-    };
-
-
-    if (titles[page]) {
-
-        $("pageTitle").textContent =
-            titles[page][0];
-
-        $("pageSubtitle").textContent =
-            titles[page][1];
-
-    }
-
-
-    if (page === "records") {
-
-        renderStudents();
-
-    }
-
-
-    if (page === "courses") {
-
-        renderCourses();
-
-    }
-
-
-    if (page === "statistics") {
-
-        updateStatistics();
-
-    }
-
-
-    updateDashboard();
-
-    closeMenu();
-
-}
-
-
-/* ================= ALL PAGE BUTTONS ================= */
-
-document.addEventListener(
-    "click",
-    function(event) {
-
-        const button =
-            event.target.closest("[data-page]");
-
-
-        if (!button) {
-            return;
-        }
-
-
-        openPage(
-            button.dataset.page
-        );
-
-    }
-);
-
-
-/* =========================================================
-   ADD STUDENT
-   ========================================================= */
-
-$("studentForm").addEventListener(
-    "submit",
-    async function(event) {
-
-        event.preventDefault();
-
-
-        const student = {
-
-            name:
-                $("studentName")
-                    .value
-                    .trim(),
-
-            id:
-                $("studentId")
-                    .value
-                    .trim(),
-
-            email:
-                $("studentEmail")
-                    .value
-                    .trim(),
-
-            phone:
-                $("studentPhone")
-                    .value
-                    .trim(),
-
-            course:
-                $("studentCourse")
-                    .value,
-
-            result:
-                $("studentResult")
-                    .value,
-
-            createdAt:
-                new Date().toISOString()
-
-        };
-
-
-        /* Required fields */
-
-        if (!student.name || !student.id) {
-
-            alert(
-                "Enter Student Name and Student ID."
-            );
-
-            return;
-
-        }
-
-
-        /* Duplicate ID Firebase me check karo */
-
-        try {
-
-            const duplicate =
-                await db
-                    .collection("students")
-                    .where(
-                        "id",
-                        "==",
-                        student.id
-                    )
-                    .get();
-
-
-            if (!duplicate.empty) {
-
-                alert(
-                    "This Student ID already exists."
-                );
-
-                return;
-
-            }
-
-
-            /* Firebase me save */
-
-            const docRef =
-                await db
-                    .collection("students")
-                    .add(student);
-
-
-            console.log(
-                "Student saved to Firebase:",
-                docRef.id
-            );
-
-
-            /* Form clear */
-
-            this.reset();
-
-
-            /* Firebase se fresh data lao */
-
-            await loadStudents();
-
-
-            alert(
-                "Student added successfully! 🎉\n\n" +
-                "Firebase me save ho gaya."
-            );
-
-
-            openPage("records");
-
-
-        } catch (error) {
-
-            console.error(
-                "Firebase error:",
-                error
-            );
-
-
-            alert(
-                "Student Firebase me save nahi hua.\n\n" +
-                "Error: " +
-                error.message
-            );
-
-        }
-
-    }
-);
-
-
-/* =========================================================
-   DASHBOARD
-   ========================================================= */
-
-function updateDashboard() {
-
-    const total =
-        students.length;
-
-
-    const passed =
-        students.filter(
-            student =>
-                student.result === "Passed"
-        ).length;
-
-
-    const failed =
-        students.filter(
-            student =>
-                student.result === "Failed"
-        ).length;
-
-
-    const courses =
-        new Set(
-            students
-                .map(
-                    student =>
-                        student.course
-                )
-                .filter(Boolean)
-        ).size;
-
-
-    $("totalCount").textContent =
-        total;
-
-
-    $("passedCount").textContent =
-        passed;
-
-
-    $("failedCount").textContent =
-        failed;
-
-
-    $("courseCount").textContent =
-        courses;
-
+  if (
+    page === "statistics"
+  ) {
 
     updateStatistics();
 
-}
+  }
 
+  updateDashboard();
 
-/* ================= SAFE TEXT ================= */
-
-function safe(value) {
-
-    return String(value || "")
-        .replace(
-            /[&<>"']/g,
-            char => {
-
-                const map = {
-
-                    "&": "&amp;",
-                    "<": "&lt;",
-                    ">": "&gt;",
-                    '"': "&quot;",
-                    "'": "&#039;"
-
-                };
-
-                return map[char];
-
-            }
-        );
+  closeMenu();
 
 }
 
 
-/* =========================================================
-   RECORDS
-   ========================================================= */
+document.addEventListener(
+  "click",
+  (event) => {
 
-function renderStudents() {
+    const button =
+      event.target.closest(
+        "[data-page]"
+      );
 
-    const table =
-        $("studentTable");
+    if (!button) return;
 
-    const empty =
-        $("emptyRecords");
-
-    const search =
-        $("searchInput")
-            .value
-            .trim()
-            .toLowerCase();
-
-
-    const list =
-        students.filter(
-            student => {
-
-                const text = (
-
-                    (student.name || "") +
-                    " " +
-                    (student.id || "") +
-                    " " +
-                    (student.email || "") +
-                    " " +
-                    (student.course || "") +
-                    " " +
-                    (student.result || "")
-
-                ).toLowerCase();
-
-
-                return text.includes(search);
-
-            }
-        );
-
-
-    table.innerHTML = "";
-
-
-    if (list.length === 0) {
-
-        empty.style.display =
-            "block";
-
-        return;
-
-    }
-
-
-    empty.style.display =
-        "none";
-
-
-    list.forEach(
-        (student, index) => {
-
-            const row =
-                document.createElement("tr");
-
-
-            row.innerHTML = `
-
-                <td>
-                    ${index + 1}
-                </td>
-
-                <td>
-
-                    <b>
-                        ${safe(student.name)}
-                    </b>
-
-                    <br>
-
-                    <small>
-                        ${safe(student.email)}
-                    </small>
-
-                </td>
-
-                <td>
-                    ${safe(student.id)}
-                </td>
-
-                <td>
-                    ${safe(student.course)}
-                </td>
-
-                <td>
-
-                    <span class="badge ${
-                        student.result === "Passed"
-                            ? "pass"
-                            : "fail"
-                    }">
-
-                        ${safe(student.result)}
-
-                    </span>
-
-                </td>
-
-                <td>
-
-                    <button
-                        class="delete-btn"
-                        data-delete="${student.firebaseId}"
-                    >
-                        Delete
-                    </button>
-
-                </td>
-
-            `;
-
-
-            table.appendChild(row);
-
-        }
+    openPage(
+      button.dataset.page
     );
 
-
-    document
-        .querySelectorAll("[data-delete]")
-        .forEach(
-            button => {
-
-                button.addEventListener(
-                    "click",
-                    async function() {
-
-                        if (
-                            !confirm(
-                                "Delete this student?"
-                            )
-                        ) {
-
-                            return;
-
-                        }
-
-
-                        const documentId =
-                            button.dataset.delete;
-
-
-                        try {
-
-                            await db
-                                .collection("students")
-                                .doc(documentId)
-                                .delete();
-
-
-                            await loadStudents();
-
-
-                            alert(
-                                "Student deleted successfully."
-                            );
-
-
-                        } catch (error) {
-
-                            console.error(
-                                "Delete error:",
-                                error
-                            );
-
-
-                            alert(
-                                "Student delete nahi hua.\n\n" +
-                                error.message
-                            );
-
-                        }
-
-                    }
-                );
-
-            }
-        );
-
-}
-
-
-/* ================= SEARCH ================= */
-
-$("searchInput").addEventListener(
-    "input",
-    renderStudents
+  }
 );
 
 
-/* =========================================================
-   COURSES
-   ========================================================= */
+/* ================= STUDENTS LOAD ================= */
 
-function renderCourses() {
+async function loadStudents() {
 
-    const grid =
-        $("courseGrid");
+  try {
 
+    const snapshot =
+      await db
+        .collection("students")
+        .orderBy(
+          "createdAt",
+          "desc"
+        )
+        .get();
 
-    const courses = [
+    students =
+      snapshot.docs.map(
+        (doc) => ({
 
-        [
-            "B.Tech Computer Science",
-            "💻",
-            "Computer Science & Engineering"
-        ],
+          firebaseId:
+            doc.id,
 
-        [
-            "BCA",
-            "🖥️",
-            "Bachelor of Computer Applications"
-        ],
+          ...doc.data()
 
-        [
-            "BBA",
-            "📈",
-            "Business Administration"
-        ],
+        })
+      );
 
-        [
-            "Diploma CSE",
-            "⚙️",
-            "Diploma in Computer Science"
-        ],
-
-        [
-            "B.Com",
-            "💼",
-            "Bachelor of Commerce"
-        ],
-
-        [
-            "Other",
-            "🎓",
-            "Other Academic Programs"
-        ]
-
-    ];
-
-
-    grid.innerHTML = "";
-
-
-    courses.forEach(
-        course => {
-
-            const count =
-                students.filter(
-                    student =>
-                        student.course ===
-                        course[0]
-                ).length;
-
-
-            const card =
-                document.createElement("div");
-
-
-            card.className =
-                "course-card";
-
-
-            card.innerHTML = `
-
-                <div class="course-icon">
-                    ${course[1]}
-                </div>
-
-                <h3>
-                    ${safe(course[0])}
-                </h3>
-
-                <p>
-                    ${safe(course[2])}
-                </p>
-
-                <p>
-                    <b>${count}</b>
-                    registered students
-                </p>
-
-            `;
-
-
-            grid.appendChild(card);
-
-        }
-    );
-
-}
-
-
-/* =========================================================
-   STATISTICS
-   ========================================================= */
-
-function updateStatistics() {
-
-    const total =
-        students.length;
-
-
-    const passed =
-        students.filter(
-            student =>
-                student.result === "Passed"
-        ).length;
-
-
-    const failed =
-        students.filter(
-            student =>
-                student.result === "Failed"
-        ).length;
-
-
-    const passedPercent =
-        total
-            ? Math.round(
-                (passed / total) * 100
-            )
-            : 0;
-
-
-    const failedPercent =
-        total
-            ? Math.round(
-                (failed / total) * 100
-            )
-            : 0;
-
-
-    $("passedPercent").textContent =
-        passedPercent + "%";
-
-
-    $("failedPercent").textContent =
-        failedPercent + "%";
-
-
-    $("passedBar").style.width =
-        passedPercent + "%";
-
-
-    $("failedBar").style.width =
-        failedPercent + "%";
-
-
-    $("statTotal").textContent =
-        total;
-
-
-    $("statPassed").textContent =
-        passed;
-
-
-    $("statFailed").textContent =
-        failed;
-
-}
-
-
-/* =========================================================
-   LOGOUT
-   ========================================================= */
-
-$("logout").addEventListener(
-    "click",
-    function() {
-
-        sessionStorage.removeItem(
-            "studenthub_logged_in"
-        );
-
-
-        $("app")
-            .classList
-            .add("hidden");
-
-
-        $("loginPage")
-            .classList
-            .remove("hidden");
-
-
-        $("userId").value = "";
-
-        $("password").value = "";
-
-
-        showLoginSection();
-
-        closeMenu();
-
-    }
-);
-
-
-/* =========================================================
-   INPUT VISIBILITY
-   ========================================================= */
-
-document
-    .querySelectorAll(
-        ".student-form input, .student-form select"
-    )
-    .forEach(
-        function(field) {
-
-            field.addEventListener(
-                "input",
-                function() {
-
-                    this.style.color =
-                        "#172033";
-
-                    this.style.webkitTextFillColor =
-                        "#172033";
-
-                    this.style.backgroundColor =
-                        "#ffffff";
-
-                }
-            );
-
-
-            field.addEventListener(
-                "change",
-                function() {
-
-                    this.style.color =
-                        "#172033";
-
-                    this.style.webkitTextFillColor =
-                        "#172033";
-
-                    this.style.backgroundColor =
-                        "#ffffff";
-
-                }
-            );
-
-        }
-    );
-
-
-/* =========================================================
-   START APP
-   ========================================================= */
-
-async function startApp() {
+    renderStudents();
 
     updateDashboard();
 
     renderCourses();
 
-    closeMenu();
+  } catch (error) {
 
+    console.error(
+      "Firebase load error:",
+      error
+    );
 
-    if (
-        sessionStorage.getItem(
-            "studenthub_logged_in"
-        ) === "true"
-    ) {
+    showMessage(
+      "recordsStatus",
+      "Firebase data load failed: " +
+        error.message,
+      "error"
+    );
 
-        $("loginPage")
-            .classList
-            .add("hidden");
-
-
-        $("app")
-            .classList
-            .remove("hidden");
-
-
-        openPage("dashboard");
-
-
-        /* Firebase se data load */
-
-        await loadStudents();
-
-
-    } else {
-
-        $("loginPage")
-            .classList
-            .remove("hidden");
-
-
-        $("app")
-            .classList
-            .add("hidden");
-
-
-        showLoginSection();
-
-    }
+  }
 
 }
 
+
+/* ================= ADD STUDENT ================= */
+
+$("studentForm").addEventListener(
+  "submit",
+  async function (event) {
+
+    event.preventDefault();
+
+    const student = {
+
+      name:
+        $("studentName")
+          .value
+          .trim(),
+
+      id:
+        $("studentId")
+          .value
+          .trim(),
+
+      email:
+        $("studentEmail")
+          .value
+          .trim(),
+
+      phone:
+        $("studentPhone")
+          .value
+          .trim(),
+
+      course:
+        $("studentCourse")
+          .value,
+
+      result:
+        $("studentResult")
+          .value,
+
+      createdAt:
+        firebase.firestore
+          .FieldValue
+          .serverTimestamp(),
+
+      createdBy:
+        auth.currentUser
+          ? auth.currentUser.uid
+          : null
+
+    };
+
+    if (
+      !student.name ||
+      !student.id
+    ) {
+
+      alert(
+        "Enter Student Name and Student ID."
+      );
+
+      return;
+
+    }
+
+    try {
+
+      const duplicate =
+        await db
+          .collection("students")
+          .where(
+            "id",
+            "==",
+            student.id
+          )
+          .limit(1)
+          .get();
+
+      if (
+        !duplicate.empty
+      ) {
+
+        alert(
+          "This Student ID already exists."
+        );
+
+        return;
+
+      }
+
+      await db
+        .collection("students")
+        .add(student);
+
+      this.reset();
+
+      await loadStudents();
+
+      alert(
+        "Student added successfully! 🎉\n\nFirebase me save ho gaya."
+      );
+
+      openPage(
+        "records"
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Add student error:",
+        error
+      );
+
+      alert(
+        "Student Firebase me save nahi hua.\n\n" +
+        error.message
+      );
+
+    }
+
+  }
+);
+
+
+/* ================= RECORDS ================= */
+
+function renderStudents() {
+
+  const table =
+    $("studentTable");
+
+  const empty =
+    $("emptyRecords");
+
+  const search =
+    $("searchInput")
+      .value
+      .trim()
+      .toLowerCase();
+
+  const list =
+    students.filter(
+      (student) => {
+
+        const text = [
+
+          student.name,
+          student.id,
+          student.email,
+          student.phone,
+          student.course,
+          student.result
+
+        ]
+          .join(" ")
+          .toLowerCase();
+
+        return text.includes(
+          search
+        );
+
+      }
+    );
+
+  table.innerHTML =
+    "";
+
+  if (
+    list.length === 0
+  ) {
+
+    empty.style.display =
+      "block";
+
+    return;
+
+  }
+
+  empty.style.display =
+    "none";
+
+  list.forEach(
+    (student, index) => {
+
+      const row =
+        document.createElement(
+          "tr"
+        );
+
+      row.innerHTML = `
+
+        <td>
+          ${index + 1}
+        </td>
+
+        <td>
+
+          <b>
+            ${safe(student.name)}
+          </b>
+
+          <br>
+
+          <small>
+            ${safe(student.email)}
+          </small>
+
+        </td>
+
+        <td>
+          ${safe(student.id)}
+        </td>
+
+        <td>
+          ${safe(student.course)}
+        </td>
+
+        <td>
+
+          <span class="badge ${
+            student.result === "Passed"
+              ? "pass"
+              : "fail"
+          }">
+
+            ${safe(student.result)}
+
+          </span>
+
+        </td>
+
+        <td>
+
+          <button
+            class="delete-btn"
+            data-delete="${safe(student.firebaseId)}"
+          >
+            Delete
+          </button>
+
+        </td>
+
+      `;
+
+      table.appendChild(
+        row
+      );
+
+    }
+  );
+
+
+  document
+    .querySelectorAll(
+      "[data-delete]"
+    )
+    .forEach(
+      (button) => {
+
+        button.addEventListener(
+          "click",
+          async () => {
+
+            const id =
+              button.dataset.delete;
+
+            if (
+              !confirm(
+                "Delete this student permanently?"
+              )
+            ) {
+
+              return;
+
+            }
+
+            try {
+
+              await db
+                .collection(
+                  "students"
+                )
+                .doc(id)
+                .delete();
+
+              await loadStudents();
+
+              alert(
+                "Student deleted successfully."
+              );
+
+            } catch (error) {
+
+              console.error(
+                "Delete error:",
+                error
+              );
+
+              alert(
+                "Delete failed.\n\n" +
+                error.message
+              );
+
+            }
+
+          }
+        );
+
+      }
+    );
+
+}
+
+
+$("searchInput").addEventListener(
+  "input",
+  renderStudents
+);
+
+
+/* ================= DASHBOARD ================= */
+
+function updateDashboard() {
+
+  const total =
+    students.length;
+
+  const passed =
+    students.filter(
+      (s) =>
+        s.result === "Passed"
+    ).length;
+
+  const failed =
+    students.filter(
+      (s) =>
+        s.result === "Failed"
+    ).length;
+
+  const courses =
+    new Set(
+      students
+        .map(
+          (s) =>
+            s.course
+        )
+        .filter(Boolean)
+    ).size;
+
+  $("totalCount").textContent =
+    total;
+
+  $("passedCount").textContent =
+    passed;
+
+  $("failedCount").textContent =
+    failed;
+
+  $("courseCount").textContent =
+    courses;
+
+  updateStatistics();
+
+}
+
+
+/* ================= COURSES ================= */
+
+function renderCourses() {
+
+  const grid =
+    $("courseGrid");
+
+  if (!grid) return;
+
+  const courses = [
+
+    [
+      "B.Tech Computer Science",
+      "💻",
+      "Computer Science & Engineering"
+    ],
+
+    [
+      "BCA",
+      "🖥️",
+      "Bachelor of Computer Applications"
+    ],
+
+    [
+      "BBA",
+      "📈",
+      "Business Administration"
+    ],
+
+    [
+      "Diploma CSE",
+      "⚙️",
+      "Diploma in Computer Science"
+    ],
+
+    [
+      "B.Com",
+      "💼",
+      "Bachelor of Commerce"
+    ],
+
+    [
+      "Other",
+      "🎓",
+      "Other Academic Programs"
+    ]
+
+  ];
+
+
+  grid.innerHTML =
+    "";
+
+  courses.forEach(
+    ([name, icon, description]) => {
+
+      const count =
+        students.filter(
+          (student) =>
+            student.course ===
+            name
+        ).length;
+
+      const card =
+        document.createElement(
+          "div"
+        );
+
+      card.className =
+        "course-card";
+
+      card.innerHTML = `
+
+        <div class="course-icon">
+          ${icon}
+        </div>
+
+        <h3>
+          ${safe(name)}
+        </h3>
+
+        <p>
+          ${safe(description)}
+        </p>
+
+        <p>
+          <b>${count}</b>
+          registered students
+        </p>
+
+      `;
+
+      grid.appendChild(
+        card
+      );
+
+    }
+  );
+
+}
+
+
+/* ================= STATISTICS ================= */
+
+function updateStatistics() {
+
+  const total =
+    students.length;
+
+  const passed =
+    students.filter(
+      (s) =>
+        s.result === "Passed"
+    ).length;
+
+  const failed =
+    students.filter(
+      (s) =>
+        s.result === "Failed"
+    ).length;
+
+  const passedPercent =
+    total
+      ? Math.round(
+          (passed / total) * 100
+        )
+      : 0;
+
+  const failedPercent =
+    total
+      ? Math.round(
+          (failed / total) * 100
+        )
+      : 0;
+
+  $("passedPercent").textContent =
+    passedPercent + "%";
+
+  $("failedPercent").textContent =
+    failedPercent + "%";
+
+  $("passedBar").style.width =
+    passedPercent + "%";
+
+  $("failedBar").style.width =
+    failedPercent + "%";
+
+  $("statTotal").textContent =
+    total;
+
+  $("statPassed").textContent =
+    passed;
+
+  $("statFailed").textContent =
+    failed;
+
+}
+
+
+/* ================= LOGOUT ================= */
+
+$("logout").addEventListener(
+  "click",
+  async () => {
+
+    try {
+
+      sessionStorage.removeItem(
+        "studenthub_role"
+      );
+
+      await auth.signOut();
+
+    } catch (error) {
+
+      console.error(
+        "Logout error:",
+        error
+      );
+
+    }
+
+    $("loginForm").reset();
+
+    $("forgotForm").reset();
+
+    showLoginPage();
+
+  }
+);
+
+
+/* ================= START ================= */
+
+renderCourses();
+
+updateDashboard();
