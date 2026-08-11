@@ -1,896 +1,295 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
-    <title>StudentHub - Student Management</title>
-
-    <link rel="stylesheet" href="style.css">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>StudentHub - Student Management</title>
+  <link rel="stylesheet" href="style.css">
 </head>
-
 <body>
 
 <!-- ================= LOGIN ================= -->
-
 <div id="loginPage" class="login-page">
+  <div class="login-card">
 
-    <div class="login-card">
-
-        <div class="brand">
-            <div class="logo">🎓</div>
-
-            <div>
-                <h2>Student<span>Hub</span></h2>
-                <small>STUDENT MANAGEMENT SYSTEM</small>
-            </div>
-        </div>
-
-
-        <!-- LOGIN / CREATE BUTTONS -->
-
-        <div class="auth-tabs">
-
-            <button id="showLogin" class="auth-tab active">
-                LOGIN
-            </button>
-
-            <button id="showCreate" class="auth-tab">
-                CREATE ACCOUNT
-            </button>
-
-        </div>
-
-
-        <!-- LOGIN -->
-
-        <div id="loginSection">
-
-            <h1>Sign in to continue</h1>
-
-            <p class="login-sub">
-                Manage student records from one place.
-            </p>
-
-            <form id="loginForm">
-
-                <label>User ID / Email</label>
-
-                <input
-                    id="userId"
-                    type="text"
-                    placeholder="Enter User ID or Email"
-                    required
-                >
-
-
-                <label>Password</label>
-
-                <div class="password-box">
-
-                    <input
-                        id="password"
-                        type="password"
-                        placeholder="Enter your password"
-                        required
-                    >
-
-                    <button
-                        type="button"
-                        id="togglePassword"
-                    >👁</button>
-
-                </div>
-
-
-                <select id="role">
-                    <option>Student</option>
-                    <option>Admin</option>
-                    <option>Teacher</option>
-                </select>
-
-
-                <p id="loginError" class="error"></p>
-
-
-                <button
-                    type="submit"
-                    class="main-btn"
-                >
-                    Login to Portal
-                </button>
-
-            </form>
-
-        </div>
-
-
-        <!-- CREATE ACCOUNT -->
-
-        <div
-            id="createSection"
-            style="display:none;"
-        >
-
-            <h1>Create Account</h1>
-
-            <p class="login-sub">
-                Create your StudentHub account.
-            </p>
-
-
-            <form id="createAccountForm">
-
-                <label>Full Name</label>
-
-                <input
-                    id="createName"
-                    type="text"
-                    placeholder="Enter your name"
-                    required
-                >
-
-
-                <label>Email Address</label>
-
-                <input
-                    id="createEmail"
-                    type="email"
-                    placeholder="Enter your email"
-                    required
-                >
-
-
-                <label>Password</label>
-
-                <input
-                    id="createPassword"
-                    type="password"
-                    placeholder="Create password"
-                    required
-                >
-
-
-                <p id="createError" class="error"></p>
-
-
-                <button
-                    type="submit"
-                    class="main-btn"
-                >
-                    Create Account
-                </button>
-
-            </form>
-
-        </div>
-
+    <div class="brand">
+      <div class="logo">🎓</div>
+      <div>
+        <h2>Student<span>Hub</span></h2>
+        <small>STUDENT MANAGEMENT SYSTEM</small>
+      </div>
     </div>
 
-</div>
+    <div class="auth-tabs">
+      <button id="showLogin" class="auth-tab active" type="button">LOGIN</button>
+      <button id="showCreate" class="auth-tab" type="button">CREATE ACCOUNT</button>
+    </div>
 
+    <!-- LOGIN -->
+    <div id="loginSection">
+      <h1>Sign in to continue</h1>
+      <p class="login-sub">Manage student records from one place.</p>
 
-<!-- ================= APP ================= -->
+      <form id="loginForm">
+        <label for="userId">User ID / Email</label>
+        <input id="userId" type="email" placeholder="Enter your email" autocomplete="email" required>
 
-<div id="app" class="app hidden">
-
-
-    <!-- OVERLAY -->
-
-    <div id="overlay" class="overlay"></div>
-
-
-    <!-- SIDEBAR -->
-
-    <aside id="sidebar" class="sidebar">
-
-        <div class="sidebar-logo">
-
-            <div class="side-logo-icon">
-                🎓
-            </div>
-
-            <div>
-                <b>StudentHub</b>
-                <small>Portal</small>
-            </div>
-
+        <label for="password">Password</label>
+        <div class="password-box">
+          <input id="password" type="password" placeholder="Enter your password" autocomplete="current-password" required>
+          <button type="button" id="togglePassword" aria-label="Show password">👁</button>
         </div>
 
+        <div class="login-options">
+          <select id="role" aria-label="Role">
+            <option value="Student">Student</option>
+            <option value="Admin">Admin</option>
+            <option value="Teacher">Teacher</option>
+          </select>
+          <button type="button" id="forgotPasswordBtn" class="link-btn">Forgot Password?</button>
+        </div>
 
-        <nav>
+        <p id="loginError" class="error"></p>
 
-            <button
-                class="nav-item active"
-                data-page="dashboard"
-            >
-                🏠
-                <span>Overview</span>
-            </button>
+        <button type="submit" class="main-btn">Login to Portal</button>
+      </form>
+    </div>
 
+    <!-- FORGOT PASSWORD -->
+    <div id="forgotSection" class="hidden-section">
+      <h1>Reset Password</h1>
+      <p class="login-sub">Enter your registered email. Firebase will send a password reset link.</p>
 
-            <button
-                class="nav-item"
-                data-page="profile"
-            >
-                👤
-                <span>Profile</span>
-            </button>
+      <form id="forgotForm">
+        <label for="resetEmail">Email Address</label>
+        <input id="resetEmail" type="email" placeholder="Enter your registered email" autocomplete="email" required>
+        <p id="forgotMessage" class="message"></p>
 
+        <button type="submit" class="main-btn">Send Reset Link</button>
+        <button type="button" id="backToLogin" class="secondary-btn">← Back to Login</button>
+      </form>
+    </div>
 
-            <button
-                class="nav-item"
-                data-page="courses"
-            >
-                📚
-                <span>Courses</span>
-            </button>
+    <!-- CREATE ACCOUNT -->
+    <div id="createSection" class="hidden-section">
+      <h1>Create Account</h1>
+      <p class="login-sub">Create your StudentHub account.</p>
 
+      <form id="createAccountForm">
+        <label for="createName">Full Name</label>
+        <input id="createName" type="text" placeholder="Enter your name" required>
 
-            <button
-                class="nav-item"
-                data-page="attendance"
-            >
-                📅
-                <span>Attendance</span>
-            </button>
+        <label for="createEmail">Email Address</label>
+        <input id="createEmail" type="email" placeholder="Enter your email" autocomplete="email" required>
 
+        <label for="createPassword">Password</label>
+        <input id="createPassword" type="password" placeholder="Create password (6+ characters)" minlength="6" required>
 
-            <button
-                class="nav-item"
-                data-page="fees"
-            >
-                💳
-                <span>Fees</span>
-            </button>
+        <p id="createError" class="message"></p>
+        <button type="submit" class="main-btn">Create Account</button>
+      </form>
+    </div>
 
+  </div>
+</div>
 
-            <button
-                class="nav-item"
-                data-page="notices"
-            >
-                🔔
-                <span>Notices</span>
-            </button>
+<!-- ================= APP ================= -->
+<div id="app" class="app hidden">
 
-        </nav>
+  <div id="overlay" class="overlay"></div>
 
+  <aside id="sidebar" class="sidebar">
+    <div class="sidebar-logo">
+      <div class="side-logo-icon">🎓</div>
+      <div><b>StudentHub</b><small>Portal</small></div>
+    </div>
 
-        <button id="logout" class="logout">
-            🚪 Logout
-        </button>
+    <nav>
+      <button class="nav-item active" data-page="dashboard">🏠 <span>Overview</span></button>
+      <button class="nav-item" data-page="profile">👤 <span>Profile</span></button>
+      <button class="nav-item" data-page="add">➕ <span>Add Student</span></button>
+      <button class="nav-item" data-page="records">📋 <span>Student Records</span></button>
+      <button class="nav-item" data-page="courses">📚 <span>Courses</span></button>
+      <button class="nav-item" data-page="statistics">📊 <span>Statistics</span></button>
+      <button class="nav-item" data-page="attendance">📅 <span>Attendance</span></button>
+      <button class="nav-item" data-page="fees">💳 <span>Fees</span></button>
+      <button class="nav-item" data-page="notices">🔔 <span>Notices</span></button>
+    </nav>
 
-    </aside>
+    <button id="logout" class="logout" type="button">🚪 Logout</button>
+  </aside>
 
+  <main class="main">
+    <header class="topbar">
+      <button id="menuBtn" class="menu-btn" type="button" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
+      <div>
+        <h2 id="pageTitle">Dashboard</h2>
+        <p id="pageSubtitle">Manage your students easily.</p>
+      </div>
+      <div class="user-chip"><span id="currentUserName">User</span></div>
+    </header>
 
-    <!-- MAIN -->
+    <!-- DASHBOARD -->
+    <section id="dashboard" class="page active">
+      <div class="hero">
+        <div class="hero-content">
+          <small>• STUDENT MANAGEMENT</small>
+          <h1>Manage students<br><span>smarter & faster.</span></h1>
+          <p>Add, search and manage student academic records from one dashboard.</p>
+          <button class="hero-btn" data-page="add" type="button">+ Add New Student →</button>
+        </div>
+      </div>
 
-    <main class="main">
+      <div class="stats-grid">
+        <div class="stat-card blue"><div class="stat-icon">👨‍🎓</div><div><small>TOTAL STUDENTS</small><strong id="totalCount">0</strong><p>Registered students</p></div></div>
+        <div class="stat-card green"><div class="stat-icon">✓</div><div><small>PASSED</small><strong id="passedCount">0</strong><p>Successful students</p></div></div>
+        <div class="stat-card red"><div class="stat-icon">×</div><div><small>FAILED</small><strong id="failedCount">0</strong><p>Needs improvement</p></div></div>
+        <div class="stat-card purple"><div class="stat-icon">📚</div><div><small>COURSES</small><strong id="courseCount">0</strong><p>Active courses</p></div></div>
+      </div>
 
+      <div class="box">
+        <h2>Quick Access</h2>
+        <p>Jump directly to important sections.</p>
+        <div class="quick-grid">
+          <button class="quick-card" data-page="add" type="button"><div class="quick-icon">👨‍🎓</div><div><b>Add Student</b><small>Create new record</small></div><span>→</span></button>
+          <button class="quick-card" data-page="records" type="button"><div class="quick-icon">📋</div><div><b>Student Records</b><small>View all students</small></div><span>→</span></button>
+          <button class="quick-card" data-page="statistics" type="button"><div class="quick-icon">📊</div><div><b>Statistics</b><small>View performance</small></div><span>→</span></button>
+        </div>
+      </div>
+    </section>
 
-        <!-- TOP BAR -->
-
-        <header class="topbar">
-
-            <button
-                id="menuBtn"
-                class="menu-btn"
-                aria-label="Menu"
-            >
-                <span></span>
-                <span></span>
-                <span></span>
-            </button>
-
-
-            <div>
-
-                <h2 id="pageTitle">
-                    Dashboard
-                </h2>
-
-                <p id="pageSubtitle">
-                    Manage your students easily.
-                </p>
-
+    <!-- ADD -->
+    <section id="add" class="page">
+      <div class="box">
+        <h2>Add New Student</h2>
+        <p>Create a new student record. Data will be saved in Firebase Firestore.</p>
+        <form id="studentForm" class="student-form">
+          <div class="form-grid">
+            <div><label for="studentName">Student Name</label><input id="studentName" required placeholder="Enter name"></div>
+            <div><label for="studentId">Student ID</label><input id="studentId" required placeholder="Enter ID"></div>
+            <div><label for="studentEmail">Email</label><input id="studentEmail" type="email" placeholder="Enter email"></div>
+            <div><label for="studentPhone">Phone</label><input id="studentPhone" placeholder="Enter phone"></div>
+            <div><label for="studentCourse">Course</label>
+              <select id="studentCourse">
+                <option>B.Tech Computer Science</option>
+                <option>BCA</option><option>BBA</option><option>Diploma CSE</option><option>B.Com</option><option>Other</option>
+              </select>
             </div>
-
-        </header>
-
-
-        <!-- ================= DASHBOARD ================= -->
-
-        <section
-            id="dashboard"
-            class="page active"
-        >
-
-
-            <!-- HERO -->
-
-            <div class="hero">
-
-                <div class="hero-content">
-
-                    <small>
-                        • STUDENT MANAGEMENT
-                    </small>
-
-                    <h1>
-                        Manage students
-                        <br>
-                        <span>smarter & faster.</span>
-                    </h1>
-
-                    <p>
-                        Add, edit, search and manage student
-                        academic records from one powerful dashboard.
-                    </p>
-
-
-                    <button
-                        class="hero-btn"
-                        data-page="add"
-                    >
-                        + Add New Student →
-                    </button>
-
-                </div>
-
+            <div><label for="studentResult">Result</label>
+              <select id="studentResult"><option>Passed</option><option>Failed</option></select>
             </div>
-
-
-            <!-- STATS -->
-
-            <div class="stats-grid">
-
-
-                <div class="stat-card blue">
-
-                    <div class="stat-icon">
-                        👨‍🎓
-                    </div>
-
-                    <div>
-                        <small>TOTAL STUDENTS</small>
-
-                        <strong id="totalCount">
-                            0
-                        </strong>
-
-                        <p>Registered students</p>
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card green">
-
-                    <div class="stat-icon">
-                        ✓
-                    </div>
-
-                    <div>
-                        <small>PASSED</small>
-
-                        <strong id="passedCount">
-                            0
-                        </strong>
-
-                        <p>Successful students</p>
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card red">
-
-                    <div class="stat-icon">
-                        ×
-                    </div>
-
-                    <div>
-                        <small>FAILED</small>
-
-                        <strong id="failedCount">
-                            0
-                        </strong>
-
-                        <p>Needs improvement</p>
-                    </div>
-
-                </div>
-
-
-                <div class="stat-card purple">
-
-                    <div class="stat-icon">
-                        📚
-                    </div>
-
-                    <div>
-                        <small>COURSES</small>
-
-                        <strong id="courseCount">
-                            0
-                        </strong>
-
-                        <p>Active courses</p>
-                    </div>
-
-                </div>
-
-            </div>
-
-
-            <!-- QUICK ACCESS -->
-
-            <div class="box">
-
-                <h2>Quick Access</h2>
-
-                <p>
-                    Jump directly to important sections.
-                </p>
-
-
-                <div class="quick-grid">
-
-
-                    <button
-                        class="quick-card"
-                        data-page="add"
-                    >
-
-                        <div class="quick-icon">
-                            👨‍🎓
-                        </div>
-
-                        <div>
-                            <b>Add Student</b>
-                            <small>Create new record</small>
-                        </div>
-
-                        <span>→</span>
-
-                    </button>
-
-
-                    <button
-                        class="quick-card"
-                        data-page="records"
-                    >
-
-                        <div class="quick-icon">
-                            📋
-                        </div>
-
-                        <div>
-                            <b>Student Records</b>
-                            <small>View all students</small>
-                        </div>
-
-                        <span>→</span>
-
-                    </button>
-
-
-                    <button
-                        class="quick-card"
-                        data-page="statistics"
-                    >
-
-                        <div class="quick-icon">
-                            📊
-                        </div>
-
-                        <div>
-                            <b>Statistics</b>
-                            <small>View performance</small>
-                        </div>
-
-                        <span>→</span>
-
-                    </button>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= ADD ================= -->
-
-        <section
-            id="add"
-            class="page"
-        >
-
-            <div class="box">
-
-                <h2>Add New Student</h2>
-
-                <p>
-                    Create a new student record.
-                </p>
-
-
-                <form
-                    id="studentForm"
-                    class="student-form"
-                >
-
-                    <div class="form-grid">
-
-                        <div>
-                            <label>Student Name</label>
-
-                            <input
-                                id="studentName"
-                                required
-                                placeholder="Enter name"
-                            >
-                        </div>
-
-
-                        <div>
-                            <label>Student ID</label>
-
-                            <input
-                                id="studentId"
-                                required
-                                placeholder="Enter ID"
-                            >
-                        </div>
-
-
-                        <div>
-                            <label>Email</label>
-
-                            <input
-                                id="studentEmail"
-                                type="email"
-                                placeholder="Enter email"
-                            >
-                        </div>
-
-
-                        <div>
-                            <label>Phone</label>
-
-                            <input
-                                id="studentPhone"
-                                placeholder="Enter phone"
-                            >
-                        </div>
-
-
-                        <div>
-                            <label>Course</label>
-
-                            <select id="studentCourse">
-
-                                <option>B.Tech Computer Science</option>
-                                <option>BCA</option>
-                                <option>BBA</option>
-                                <option>Diploma CSE</option>
-                                <option>B.Com</option>
-                                <option>Other</option>
-
-                            </select>
-
-                        </div>
-
-
-                        <div>
-                            <label>Result</label>
-
-                            <select id="studentResult">
-
-                                <option>Passed</option>
-                                <option>Failed</option>
-
-                            </select>
-
-                        </div>
-
-                    </div>
-
-
-                    <button
-                        class="main-btn"
-                        type="submit"
-                    >
-                        + Add Student
-                    </button>
-
-                </form>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= RECORDS ================= -->
-
-        <section
-            id="records"
-            class="page"
-        >
-
-            <div class="box">
-
-                <div class="section-head">
-
-                    <div>
-                        <h2>Student Records</h2>
-
-                        <p>
-                            View and manage all students.
-                        </p>
-                    </div>
-
-
-                    <input
-                        id="searchInput"
-                        class="search"
-                        placeholder="🔎 Search students..."
-                    >
-
-                </div>
-
-
-                <div class="table-wrap">
-
-                    <table>
-
-                        <thead>
-
-                            <tr>
-                                <th>#</th>
-                                <th>Student</th>
-                                <th>ID</th>
-                                <th>Course</th>
-                                <th>Result</th>
-                                <th>Action</th>
-                            </tr>
-
-                        </thead>
-
-                        <tbody id="studentTable">
-                        </tbody>
-
-                    </table>
-
-                </div>
-
-
-                <div
-                    id="emptyRecords"
-                    class="empty"
-                >
-                    No student records found.
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= COURSES ================= -->
-
-        <section
-            id="courses"
-            class="page"
-        >
-
-            <div class="box">
-
-                <h2>Courses</h2>
-
-                <p>
-                    Active academic programs.
-                </p>
-
-
-                <div
-                    id="courseGrid"
-                    class="course-grid"
-                >
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= STATISTICS ================= -->
-
-        <section
-            id="statistics"
-            class="page"
-        >
-
-            <div class="box">
-
-                <h2>Statistics</h2>
-
-                <p>
-                    Student performance overview.
-                </p>
-
-
-                <div class="statistics">
-
-
-                    <div class="stat-row">
-
-                        <div>
-                            <b>Passed</b>
-
-                            <span id="passedPercent">
-                                0%
-                            </span>
-                        </div>
-
-                        <div class="progress">
-                            <div
-                                id="passedBar"
-                                class="progress-fill passed"
-                            ></div>
-                        </div>
-
-                    </div>
-
-
-                    <div class="stat-row">
-
-                        <div>
-                            <b>Failed</b>
-
-                            <span id="failedPercent">
-                                0%
-                            </span>
-                        </div>
-
-                        <div class="progress">
-                            <div
-                                id="failedBar"
-                                class="progress-fill failed"
-                            ></div>
-                        </div>
-
-                    </div>
-
-
-                    <div class="mini-stats">
-
-                        <div>
-                            <small>Total</small>
-                            <strong id="statTotal">0</strong>
-                        </div>
-
-                        <div>
-                            <small>Passed</small>
-                            <strong id="statPassed">0</strong>
-                        </div>
-
-                        <div>
-                            <small>Failed</small>
-                            <strong id="statFailed">0</strong>
-                        </div>
-
-                    </div>
-
-                </div>
-
-            </div>
-
-        </section>
-
-
-        <!-- ================= OTHER PAGES ================= -->
-
-        <section id="profile" class="page">
-            <div class="box profile-card">
-                <div class="profile-avatar">👤</div>
-                <h2>Student Profile</h2>
-                <p>Manage your basic StudentHub profile information.</p>
-                <div class="profile-info-grid">
-                    <div><small>Name</small><strong>Student User</strong></div>
-                    <div><small>Role</small><strong>Student</strong></div>
-                    <div><small>Department</small><strong>Computer Science</strong></div>
-                    <div><small>Session</small><strong>2026 - 2027</strong></div>
-                </div>
-            </div>
-        </section>
-
-
-        <section id="attendance" class="page">
-            <div class="box">
-                <div class="section-head">
-                    <div>
-                        <h2>Attendance</h2>
-                        <p>Sample attendance records for the current semester.</p>
-                    </div>
-                    <span class="status-chip good">Good Standing</span>
-                </div>
-                <div class="attendance-summary">
-                    <div class="attendance-circle">
-                        <strong>82%</strong><span>Overall</span>
-                    </div>
-                    <div class="attendance-metrics">
-                        <div><small>Total Classes</small><strong>50</strong></div>
-                        <div><small>Present</small><strong>41</strong></div>
-                        <div><small>Absent</small><strong>9</strong></div>
-                    </div>
-                </div>
-                <div class="table-wrap">
-                    <table>
-                        <thead><tr><th>Subject</th><th>Total</th><th>Present</th><th>Attendance</th></tr></thead>
-                        <tbody>
-                            <tr><td><b>Web Development</b></td><td>12</td><td>10</td><td><span class="badge pass">83%</span></td></tr>
-                            <tr><td><b>Database Management</b></td><td>13</td><td>11</td><td><span class="badge pass">85%</span></td></tr>
-                            <tr><td><b>Computer Networks</b></td><td>10</td><td>8</td><td><span class="badge pass">80%</span></td></tr>
-                            <tr><td><b>Software Engineering</b></td><td>15</td><td>12</td><td><span class="badge pass">80%</span></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-
-        <section id="fees" class="page">
-            <div class="box">
-                <h2>Fees Management</h2>
-                <p>Sample fee information for the current academic session.</p>
-                <div class="fee-grid">
-                    <div class="fee-card total"><span>💰 Total Fees</span><strong>₹45,000</strong><small>Academic session 2026-27</small></div>
-                    <div class="fee-card paid"><span>✅ Paid</span><strong>₹30,000</strong><small>Payment received</small></div>
-                    <div class="fee-card due"><span>⚠️ Due</span><strong>₹15,000</strong><small>Next payment: 15 Sep 2026</small></div>
-                </div>
-                <div class="fee-progress-box">
-                    <div class="section-head"><b>Payment Progress</b><strong>67%</strong></div>
-                    <div class="progress"><div class="progress-fill fee-progress" style="width:67%"></div></div>
-                </div>
-                <div class="table-wrap">
-                    <table>
-                        <thead><tr><th>Receipt</th><th>Date</th><th>Amount</th><th>Status</th></tr></thead>
-                        <tbody>
-                            <tr><td>REC-1001</td><td>10 Jul 2026</td><td>₹20,000</td><td><span class="badge pass">Paid</span></td></tr>
-                            <tr><td>REC-1002</td><td>05 Aug 2026</td><td>₹10,000</td><td><span class="badge pass">Paid</span></td></tr>
-                            <tr><td>—</td><td>15 Sep 2026</td><td>₹15,000</td><td><span class="badge fail">Due</span></td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-        </section>
-
-
-        <section id="notices" class="page">
-            <div class="box">
-                <div class="section-head">
-                    <div><h2>Notice Board</h2><p>Latest academic and campus announcements.</p></div>
-                    <span class="notice-count">3 New</span>
-                </div>
-                <div class="notice-list">
-                    <article class="notice-card"><div class="notice-icon">📢</div><div><span class="notice-date">09 Aug 2026</span><h3>Mid-Semester Examination</h3><p>Students should check the examination schedule and carry their valid ID card.</p></div></article>
-                    <article class="notice-card"><div class="notice-icon">📚</div><div><span class="notice-date">07 Aug 2026</span><h3>Library Timing Updated</h3><p>The library will remain open from 9:00 AM to 6:00 PM on working days.</p></div></article>
-                    <article class="notice-card"><div class="notice-icon">🎓</div><div><span class="notice-date">05 Aug 2026</span><h3>Project Submission</h3><p>Project reports should be submitted before the department deadline.</p></div></article>
-                </div>
-            </div>
-        </section>
-
-
-    </main>
-
+          </div>
+          <button class="main-btn" type="submit">+ Add Student</button>
+        </form>
+      </div>
+    </section>
+
+    <!-- RECORDS -->
+    <section id="records" class="page">
+      <div class="box">
+        <div class="section-head">
+          <div><h2>Student Records</h2><p>View and manage all students stored in Firebase.</p></div>
+          <input id="searchInput" class="search" placeholder="🔎 Search students...">
+        </div>
+        <div id="recordsStatus" class="message"></div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>#</th><th>Student</th><th>ID</th><th>Course</th><th>Result</th><th>Action</th></tr></thead>
+            <tbody id="studentTable"></tbody>
+          </table>
+        </div>
+        <div id="emptyRecords" class="empty">No student records found.</div>
+      </div>
+    </section>
+
+    <!-- COURSES -->
+    <section id="courses" class="page">
+      <div class="box"><h2>Courses</h2><p>Active academic programs.</p><div id="courseGrid" class="course-grid"></div></div>
+    </section>
+
+    <!-- STATISTICS -->
+    <section id="statistics" class="page">
+      <div class="box">
+        <h2>Statistics</h2><p>Student performance overview.</p>
+        <div class="statistics">
+          <div class="stat-row"><div><b>Passed</b><span id="passedPercent">0%</span></div><div class="progress"><div id="passedBar" class="progress-fill passed"></div></div></div>
+          <div class="stat-row"><div><b>Failed</b><span id="failedPercent">0%</span></div><div class="progress"><div id="failedBar" class="progress-fill failed"></div></div></div>
+          <div class="mini-stats">
+            <div><small>Total</small><strong id="statTotal">0</strong></div>
+            <div><small>Passed</small><strong id="statPassed">0</strong></div>
+            <div><small>Failed</small><strong id="statFailed">0</strong></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- PROFILE -->
+    <section id="profile" class="page">
+      <div class="box profile-card">
+        <div class="profile-avatar">👤</div>
+        <h2 id="profileName">Student User</h2>
+        <p>Your StudentHub account information.</p>
+        <div class="profile-info-grid">
+          <div><small>Email</small><strong id="profileEmail">-</strong></div>
+          <div><small>Role</small><strong id="profileRole">Student</strong></div>
+          <div><small>Department</small><strong>Computer Science</strong></div>
+          <div><small>Session</small><strong>2026 - 2027</strong></div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ATTENDANCE -->
+    <section id="attendance" class="page">
+      <div class="box">
+        <div class="section-head"><div><h2>Attendance</h2><p>Sample attendance records for the current semester.</p></div><span class="status-chip good">Good Standing</span></div>
+        <div class="attendance-summary">
+          <div class="attendance-circle"><strong>82%</strong><span>Overall</span></div>
+          <div class="attendance-metrics"><div><small>Total Classes</small><strong>50</strong></div><div><small>Present</small><strong>41</strong></div><div><small>Absent</small><strong>9</strong></div></div>
+        </div>
+        <div class="table-wrap"><table><thead><tr><th>Subject</th><th>Total</th><th>Present</th><th>Attendance</th></tr></thead>
+          <tbody>
+            <tr><td><b>Web Development</b></td><td>12</td><td>10</td><td><span class="badge pass">83%</span></td></tr>
+            <tr><td><b>Database Management</b></td><td>13</td><td>11</td><td><span class="badge pass">85%</span></td></tr>
+            <tr><td><b>Computer Networks</b></td><td>10</td><td>8</td><td><span class="badge pass">80%</span></td></tr>
+            <tr><td><b>Software Engineering</b></td><td>15</td><td>12</td><td><span class="badge pass">80%</span></td></tr>
+          </tbody>
+        </table></div>
+      </div>
+    </section>
+
+    <!-- FEES -->
+    <section id="fees" class="page">
+      <div class="box">
+        <h2>Fees Management</h2><p>Sample fee information for the current academic session.</p>
+        <div class="fee-grid">
+          <div class="fee-card total"><span>💰 Total Fees</span><strong>₹45,000</strong><small>Academic session 2026-27</small></div>
+          <div class="fee-card paid"><span>✅ Paid</span><strong>₹30,000</strong><small>Payment received</small></div>
+          <div class="fee-card due"><span>⚠️ Due</span><strong>₹15,000</strong><small>Next payment: 15 Sep 2026</small></div>
+        </div>
+        <div class="fee-progress-box"><div class="section-head"><b>Payment Progress</b><strong>67%</strong></div><div class="progress"><div class="progress-fill fee-progress" style="width:67%"></div></div></div>
+      </div>
+    </section>
+
+    <!-- NOTICES -->
+    <section id="notices" class="page">
+      <div class="box">
+        <div class="section-head"><div><h2>Notice Board</h2><p>Latest academic and campus announcements.</p></div><span class="notice-count">3 New</span></div>
+        <div class="notice-list">
+          <article class="notice-card"><div class="notice-icon">📢</div><div><span class="notice-date">09 Aug 2026</span><h3>Mid-Semester Examination</h3><p>Students should check the examination schedule and carry their valid ID card.</p></div></article>
+          <article class="notice-card"><div class="notice-icon">📚</div><div><span class="notice-date">07 Aug 2026</span><h3>Library Timing Updated</h3><p>The library will remain open from 9:00 AM to 6:00 PM on working days.</p></div></article>
+          <article class="notice-card"><div class="notice-icon">🎓</div><div><span class="notice-date">05 Aug 2026</span><h3>Project Submission</h3><p>Project reports should be submitted before the department deadline.</p></div></article>
+        </div>
+      </div>
+    </section>
+
+  </main>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-    <script src="script.js"></script>
-
+<script src="script.js"></script>
 </body>
 </html>
