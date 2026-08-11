@@ -144,7 +144,7 @@ showCreate.addEventListener(
 
 $("createAccountForm").addEventListener(
     "submit",
-    async function(event) {
+    async unction(event) {
 
         event.preventDefault();
 
