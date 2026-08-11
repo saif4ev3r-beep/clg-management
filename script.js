@@ -144,7 +144,7 @@ showCreate.addEventListener(
 
 $("createAccountForm").addEventListener(
     "submit",
-    function(event) {
+    asnyc function(event) {
 
         event.preventDefault();
 
