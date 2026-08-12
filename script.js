@@ -4418,6 +4418,71 @@ setTimeout(function() {
     addBackButtons();
 }, 500);
 
+     /* =========================================================
+   BACK BUTTON - ALL INNER PAGES
+   ========================================================= */
+
+function setupAllBackButtons() {
+
+    const pageIds = [
+        "profile",
+        "records",
+        "courses",
+        "statistics",
+        "attendance",
+        "fees",
+        "notices"
+    ];
+
+    pageIds.forEach(function(pageId) {
+
+        const page = document.getElementById(pageId);
+
+        if (!page) return;
+
+        const box = page.querySelector(".box");
+
+        if (!box) return;
+
+        // Duplicate button na bane
+        if (box.querySelector(".page-back-btn")) return;
+
+        const button = document.createElement("button");
+
+        button.type = "button";
+        button.className = "page-back-btn";
+        button.innerHTML = "← Back to Dashboard";
+
+        button.onclick = function() {
+
+            if (typeof openPage === "function") {
+                openPage("dashboard");
+            }
+
+        };
+
+        box.insertBefore(button, box.firstChild);
+    });
+}
+
+
+/* =========================================================
+   RUN
+   ========================================================= */
+
+setupAllBackButtons();
+
+document.addEventListener("DOMContentLoaded", function() {
+    setupAllBackButtons();
+});
+
+setTimeout(function() {
+    setupAllBackButtons();
+}, 500);
+
+setTimeout(function() {
+    setupAllBackButtons();
+}, 1500);
   }, 1000);
 
 
