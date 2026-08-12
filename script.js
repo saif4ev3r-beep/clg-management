@@ -4352,6 +4352,72 @@ handlePasswordResetLink();
       loadFirebaseCourses();
     }
 
+     /* =========================================================
+   BACK BUTTON FOR INNER PAGES
+   Student Records / Courses / Statistics / Attendance
+   Fees / Notices
+   ========================================================= */
+
+function addBackButtons() {
+
+    const pages = [
+        "records",
+        "courses",
+        "statistics",
+        "attendance",
+        "fees",
+        "notices"
+    ];
+
+    pages.forEach(function(pageId) {
+
+        const page = document.getElementById(pageId);
+
+        if (!page) return;
+
+        // Agar button pehle se hai to dobara mat banao
+        if (page.querySelector(".page-back-btn")) return;
+
+        const box = page.querySelector(".box");
+
+        if (!box) return;
+
+        const backButton = document.createElement("button");
+
+        backButton.className = "page-back-btn";
+        backButton.type = "button";
+        backButton.innerHTML = "← Back";
+
+        backButton.addEventListener("click", function() {
+
+            // Dashboard par wapas
+            if (typeof openPage === "function") {
+                openPage("dashboard");
+            }
+
+        });
+
+        // Box ke sabse upar button lagao
+        box.insertBefore(backButton, box.firstChild);
+
+    });
+}
+
+
+/* =========================================================
+   RUN BACK BUTTON SETUP
+   ========================================================= */
+
+document.addEventListener("DOMContentLoaded", function() {
+    addBackButtons();
+});
+
+
+/* Agar app already loaded ho chuka ho */
+setTimeout(function() {
+    addBackButtons();
+}, 500);
+
   }, 1000);
 
 
