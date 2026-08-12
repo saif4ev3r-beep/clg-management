@@ -1922,3 +1922,175 @@ if (
 
   startStudentHub();
 }
+/* =========================================================
+   PASSWORD RESET FROM EMAIL LINK
+   ========================================================= */
+
+async function handlePasswordResetLink() {
+
+  const params = new URLSearchParams(
+    window.location.search
+  );
+
+  const mode = params.get("mode");
+  const oobCode = params.get("oobCode");
+
+  if (
+    mode !== "resetPassword" ||
+    !oobCode
+  ) {
+    return;
+  }
+
+  // Hide other sections
+  if ($("loginSection")) {
+    $("loginSection").classList.add("hidden-section");
+  }
+
+  if ($("createSection")) {
+    $("createSection").classList.add("hidden-section");
+  }
+
+  if ($("forgotSection")) {
+    $("forgotSection").classList.add("hidden-section");
+  }
+
+  if ($("resetSection")) {
+    $("resetSection").classList.remove("hidden-section");
+  }
+
+  try {
+
+    const email =
+      await auth.verifyPasswordResetCode(oobCode);
+
+    console.log(
+      "Password reset for:",
+      email
+    );
+
+  } catch (error) {
+
+    console.error(
+      "Reset code error:",
+      error
+    );
+
+    showMessage(
+      "resetMessage",
+      "This reset link is expired or has already been used. Please request a new link.",
+      "error"
+    );
+
+    if ($("resetForm")) {
+      $("resetForm").style.display = "none";
+    }
+
+    return;
+  }
+
+
+  if ($("resetForm")) {
+
+    $("resetForm").addEventListener(
+      "submit",
+      async function(event) {
+
+        event.preventDefault();
+
+        const newPassword =
+          $("newPassword").value.trim();
+
+        const confirmPassword =
+          $("confirmPassword").value.trim();
+
+
+        if (newPassword.length < 6) {
+
+          showMessage(
+            "resetMessage",
+            "Password must be at least 6 characters.",
+            "error"
+          );
+
+          return;
+        }
+
+
+        if (
+          newPassword !==
+          confirmPassword
+        ) {
+
+          showMessage(
+            "resetMessage",
+            "Passwords do not match.",
+            "error"
+          );
+
+          return;
+        }
+
+
+        try {
+
+          showMessage(
+            "resetMessage",
+            "Updating password...",
+            "info"
+          );
+
+
+          await auth.confirmPasswordReset(
+            oobCode,
+            newPassword
+          );
+
+
+          showMessage(
+            "resetMessage",
+            "Password updated successfully! You can now login.",
+            "success"
+          );
+
+
+          setTimeout(
+            function() {
+
+              window.history.replaceState(
+                {},
+                document.title,
+                window.location.pathname
+              );
+
+              showLoginPage();
+
+            },
+            1500
+          );
+
+
+        } catch (error) {
+
+          console.error(
+            "Confirm password reset error:",
+            error
+          );
+
+          showMessage(
+            "resetMessage",
+            "Could not update password. Please request a new reset link.",
+            "error"
+          );
+
+        }
+
+      }
+    );
+
+  }
+}
+
+
+/* Check reset link when app opens */
+handlePasswordResetLink();
