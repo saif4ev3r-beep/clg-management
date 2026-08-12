@@ -1665,6 +1665,45 @@ tbody tr:last-child td {
   background: linear-gradient(
     180deg,
     #22d3ee,
+     /* BACK BUTTON - PROPER POSITION */
+
+.page-back-btn {
+    display: inline-flex !important;
+    align-items: center;
+    justify-content: center;
+
+    position: relative !important;
+
+    margin: 0 0 18px 0 !important;
+    padding: 9px 18px !important;
+
+    width: fit-content !important;
+    min-width: 0 !important;
+
+    transform: none !important;
+}
+
+/* Mobile */
+@media (max-width: 800px) {
+    .page-back-btn {
+        display: inline-flex !important;
+        position: relative !important;
+
+        margin-top: 0 !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        margin-bottom: 18px !important;
+
+        width: auto !important;
+        min-width: 145px !important;
+
+        transform: none !important;
+    }
+
+    .page-back-btn:hover {
+        transform: translateX(-3px) !important;
+    }
+}
     #818cf8,
     #c084fc
   );
