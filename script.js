@@ -4487,3 +4487,14 @@ setTimeout(function() {
 
 
 })();
+
+const pageIds = [
+    "profile",
+    "add",
+    "records",
+    "courses",
+    "statistics",
+    "attendance",
+    "fees",
+    "notices"
+];
