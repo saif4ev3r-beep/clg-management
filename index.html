@@ -69,6 +69,46 @@
         <button type="button" id="backToLogin" class="secondary-btn">← Back to Login</button>
       </form>
     </div>
+    <!-- RESET PASSWORD -->
+<div id="resetSection" class="hidden-section">
+
+    <h1>Set New Password</h1>
+
+    <p class="login-sub">
+        Create a new password for your StudentHub account.
+    </p>
+
+    <form id="resetForm">
+
+        <label for="newPassword">New Password</label>
+
+        <input
+            id="newPassword"
+            type="password"
+            placeholder="Enter new password"
+            minlength="6"
+            required
+        >
+
+        <label for="confirmPassword">Confirm Password</label>
+
+        <input
+            id="confirmPassword"
+            type="password"
+            placeholder="Confirm new password"
+            minlength="6"
+            required
+        >
+
+        <p id="resetMessage" class="message"></p>
+
+        <button type="submit" class="main-btn">
+            Update Password
+        </button>
+
+    </form>
+
+</div>
 
     <!-- CREATE ACCOUNT -->
     <div id="createSection" class="hidden-section">
