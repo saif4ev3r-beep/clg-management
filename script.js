@@ -2096,3 +2096,2263 @@ async function handlePasswordResetLink() {
 
 /* Check reset link when app opens */
 handlePasswordResetLink();
+
+/* =========================================================
+   STUDENTHUB - COURSES / ATTENDANCE / FEES / NOTICES
+   FIREBASE ADMIN MANAGEMENT
+   ========================================================= */
+
+(function () {
+
+  /* =========================================================
+     COMMON HELPERS
+     ========================================================= */
+
+  function adminOnly() {
+    if (!isAdmin()) {
+      alert("Only Admin can perform this action.");
+      return false;
+    }
+    return true;
+  }
+
+  function formatDate(value) {
+    if (!value) return "-";
+
+    try {
+      if (value.toDate) {
+        return value.toDate().toLocaleDateString("en-IN");
+      }
+
+      return new Date(value).toLocaleDateString("en-IN");
+    } catch (e) {
+      return String(value);
+    }
+  }
+
+  function numberValue(value) {
+    const n = Number(value);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+
+  /* =========================================================
+     COURSES
+     ========================================================= */
+
+  let firebaseCourses = [];
+
+  async function loadFirebaseCourses() {
+
+    const grid = $("courseGrid");
+
+    if (!grid) return;
+
+    try {
+
+      const snapshot = await db
+        .collection("courses")
+        .get();
+
+      firebaseCourses = snapshot.docs.map(function (doc) {
+        return {
+          firebaseId: doc.id,
+          ...doc.data()
+        };
+      });
+
+      /*
+       If courses collection is empty, keep the old courses
+       already used by your StudentHub.
+      */
+
+      if (firebaseCourses.length === 0) {
+
+        const defaultCourses = [
+          {
+            name: "B.Tech Computer Science",
+            icon: "💻",
+            description: "Computer Science & Engineering"
+          },
+          {
+            name: "BCA",
+            icon: "🖥️",
+            description: "Bachelor of Computer Applications"
+          },
+          {
+            name: "BBA",
+            icon: "📈",
+            description: "Business Administration"
+          },
+          {
+            name: "Diploma CSE",
+            icon: "⚙️",
+            description: "Diploma in Computer Science"
+          },
+          {
+            name: "B.Com",
+            icon: "💼",
+            description: "Bachelor of Commerce"
+          },
+          {
+            name: "Other",
+            icon: "🎓",
+            description: "Other Academic Programs"
+          }
+        ];
+
+        if (isAdmin()) {
+
+          for (const course of defaultCourses) {
+
+            await db
+              .collection("courses")
+              .add({
+                name: course.name,
+                icon: course.icon,
+                description: course.description,
+                createdAt:
+                  firebase.firestore.FieldValue.serverTimestamp(),
+                createdBy:
+                  auth.currentUser
+                    ? auth.currentUser.uid
+                    : null
+              });
+
+          }
+
+          const newSnapshot = await db
+            .collection("courses")
+            .get();
+
+          firebaseCourses = newSnapshot.docs.map(function (doc) {
+            return {
+              firebaseId: doc.id,
+              ...doc.data()
+            };
+          });
+
+        } else {
+
+          firebaseCourses = defaultCourses.map(function (course) {
+            return {
+              firebaseId: "",
+              ...course
+            };
+          });
+
+        }
+      }
+
+      renderFirebaseCourses();
+      updateStudentCourseDropdown();
+
+    } catch (error) {
+
+      console.error(
+        "Courses Firebase error:",
+        error
+      );
+
+      grid.innerHTML = `
+        <div class="box">
+          <p style="color:#b91c1c;">
+            Could not load courses from Firebase.
+          </p>
+          <small>${safe(error.message)}</small>
+        </div>
+      `;
+    }
+  }
+
+
+  function renderFirebaseCourses() {
+
+    const grid = $("courseGrid");
+
+    if (!grid) return;
+
+    grid.innerHTML = "";
+
+    /*
+      ADMIN ADD COURSE FORM
+    */
+
+    if (isAdmin()) {
+
+      const adminBox =
+        document.createElement("div");
+
+      adminBox.style.cssText = `
+        background:#f8fafc;
+        border:1px solid #e2e8f0;
+        border-radius:18px;
+        padding:20px;
+        margin-bottom:20px;
+      `;
+
+      adminBox.innerHTML = `
+
+        <h3 style="margin-top:0;">
+          ➕ Add New Course
+        </h3>
+
+        <form id="firebaseCourseForm">
+
+          <div style="
+            display:grid;
+            grid-template-columns:
+            repeat(auto-fit,minmax(180px,1fr));
+            gap:12px;
+          ">
+
+            <input
+              id="firebaseCourseName"
+              type="text"
+              placeholder="Course Name"
+              required
+              style="
+                padding:12px;
+                border:1px solid #cbd5e1;
+                border-radius:10px;
+              "
+            >
+
+            <input
+              id="firebaseCourseIcon"
+              type="text"
+              placeholder="Icon e.g. 💻"
+              value="🎓"
+              style="
+                padding:12px;
+                border:1px solid #cbd5e1;
+                border-radius:10px;
+              "
+            >
+
+            <input
+              id="firebaseCourseDescription"
+              type="text"
+              placeholder="Course Description"
+              required
+              style="
+                padding:12px;
+                border:1px solid #cbd5e1;
+                border-radius:10px;
+              "
+            >
+
+          </div>
+
+          <button
+            type="submit"
+            class="main-btn"
+            style="margin-top:12px;"
+          >
+            ➕ Add Course
+          </button>
+
+        </form>
+      `;
+
+      grid.parentElement.insertBefore(
+        adminBox,
+        grid
+      );
+
+      const form =
+        $("firebaseCourseForm");
+
+      if (form) {
+
+        form.addEventListener(
+          "submit",
+          addFirebaseCourse
+        );
+
+      }
+    }
+
+
+    /*
+      COURSE CARDS
+    */
+
+    if (firebaseCourses.length === 0) {
+
+      grid.innerHTML += `
+        <div class="box">
+          <p>No courses added yet.</p>
+        </div>
+      `;
+
+      return;
+    }
+
+
+    firebaseCourses.forEach(function (course) {
+
+      const count =
+        students.filter(function (student) {
+
+          return String(student.course || "")
+            .toLowerCase() ===
+            String(course.name || "")
+              .toLowerCase();
+
+        }).length;
+
+
+      const card =
+        document.createElement("div");
+
+      card.className =
+        "course-card";
+
+
+      card.innerHTML = `
+
+        <div class="course-icon">
+          ${safe(course.icon || "🎓")}
+        </div>
+
+        <h3>
+          ${safe(course.name)}
+        </h3>
+
+        <p>
+          ${safe(course.description || "")}
+        </p>
+
+        <p>
+          <b>${count}</b>
+          registered students
+        </p>
+
+        ${
+          isAdmin() && course.firebaseId
+            ? `
+              <button
+                type="button"
+                class="delete-btn"
+                data-course-delete="${safe(course.firebaseId)}"
+                style="margin-top:10px;"
+              >
+                Delete
+              </button>
+            `
+            : ""
+        }
+
+      `;
+
+      grid.appendChild(card);
+
+    });
+
+
+    /*
+      DELETE COURSE
+    */
+
+    grid
+      .querySelectorAll("[data-course-delete]")
+      .forEach(function (button) {
+
+        button.addEventListener(
+          "click",
+          async function () {
+
+            if (!adminOnly()) return;
+
+            const id =
+              button.dataset.courseDelete;
+
+            if (
+              !confirm(
+                "Delete this course?"
+              )
+            ) {
+              return;
+            }
+
+            try {
+
+              await db
+                .collection("courses")
+                .doc(id)
+                .delete();
+
+              alert(
+                "Course deleted successfully."
+              );
+
+              await loadFirebaseCourses();
+
+            } catch (error) {
+
+              console.error(
+                "Delete course error:",
+                error
+              );
+
+              alert(
+                "Course delete failed.\n\n" +
+                error.message
+              );
+            }
+
+          }
+        );
+
+      });
+
+  }
+
+
+  async function addFirebaseCourse(event) {
+
+    event.preventDefault();
+
+    if (!adminOnly()) return;
+
+    const name =
+      $("firebaseCourseName")
+        .value
+        .trim();
+
+    const icon =
+      $("firebaseCourseIcon")
+        .value
+        .trim() || "🎓";
+
+    const description =
+      $("firebaseCourseDescription")
+        .value
+        .trim();
+
+
+    if (!name || !description) {
+
+      alert(
+        "Please enter Course Name and Description."
+      );
+
+      return;
+    }
+
+
+    try {
+
+      /*
+        Duplicate check
+      */
+
+      const duplicate =
+        firebaseCourses.some(function (course) {
+
+          return String(course.name)
+            .toLowerCase() ===
+            name.toLowerCase();
+
+        });
+
+
+      if (duplicate) {
+
+        alert(
+          "This course already exists."
+        );
+
+        return;
+      }
+
+
+      await db
+        .collection("courses")
+        .add({
+
+          name: name,
+          icon: icon,
+          description: description,
+
+          createdBy:
+            auth.currentUser
+              ? auth.currentUser.uid
+              : null,
+
+          createdAt:
+            firebase.firestore.FieldValue
+              .serverTimestamp()
+
+        });
+
+
+      alert(
+        "Course added successfully! 🎉"
+      );
+
+      await loadFirebaseCourses();
+
+    } catch (error) {
+
+      console.error(
+        "Add course error:",
+        error
+      );
+
+      alert(
+        "Course Firebase me save nahi hua.\n\n" +
+        error.message
+      );
+
+    }
+
+  }
+
+
+  function updateStudentCourseDropdown() {
+
+    const select =
+      $("studentCourse");
+
+    if (!select) return;
+
+    if (
+      !firebaseCourses ||
+      firebaseCourses.length === 0
+    ) {
+      return;
+    }
+
+
+    const oldValue =
+      select.value;
+
+
+    select.innerHTML = `
+
+      <option value="">
+        Select Course
+      </option>
+
+    `;
+
+
+    firebaseCourses.forEach(function (course) {
+
+      const option =
+        document.createElement("option");
+
+      option.value =
+        course.name;
+
+      option.textContent =
+        course.name;
+
+      select.appendChild(option);
+
+    });
+
+
+    /*
+      Keep previous selection if possible.
+    */
+
+    if (
+      Array.from(select.options)
+        .some(function (option) {
+          return option.value === oldValue;
+        })
+    ) {
+
+      select.value = oldValue;
+
+    }
+
+  }
+
+
+  /* =========================================================
+     ATTENDANCE
+     ========================================================= */
+
+  let attendanceRecords = [];
+
+
+  async function loadAttendance() {
+
+    try {
+
+      const snapshot =
+        await db
+          .collection("attendance")
+          .get();
+
+
+      attendanceRecords =
+        snapshot.docs.map(function (doc) {
+
+          return {
+            firebaseId: doc.id,
+            ...doc.data()
+          };
+
+        });
+
+
+      renderAttendance();
+
+    } catch (error) {
+
+      console.error(
+        "Attendance load error:",
+        error
+      );
+
+      const box =
+        $("attendance");
+
+      if (box) {
+
+        const table =
+          box.querySelector(".table-wrap");
+
+        if (table) {
+
+          table.innerHTML =
+            `<p style="color:#b91c1c;">
+              Attendance load failed:
+              ${safe(error.message)}
+            </p>`;
+
+        }
+
+      }
+
+    }
+
+  }
+
+
+  function renderAttendance() {
+
+    const section =
+      $("attendance");
+
+    if (!section) return;
+
+
+    const box =
+      section.querySelector(".box");
+
+    if (!box) return;
+
+
+    let adminPanel =
+      $("firebaseAttendanceAdmin");
+
+
+    if (!adminPanel && isAdmin()) {
+
+      adminPanel =
+        document.createElement("div");
+
+      adminPanel.id =
+        "firebaseAttendanceAdmin";
+
+      adminPanel.style.cssText = `
+        background:#f8fafc;
+        border:1px solid #e2e8f0;
+        border-radius:18px;
+        padding:20px;
+        margin-bottom:20px;
+      `;
+
+      adminPanel.innerHTML = `
+
+        <h3 style="margin-top:0;">
+          ➕ Add Attendance
+        </h3>
+
+        <form id="firebaseAttendanceForm">
+
+          <div style="
+            display:grid;
+            grid-template-columns:
+            repeat(auto-fit,minmax(180px,1fr));
+            gap:12px;
+          ">
+
+            <select
+              id="attendanceStudent"
+              required
+              style="
+                padding:12px;
+                border:1px solid #cbd5e1;
+                border-radius:10px;
+              "
+            >
+              <option value="">
+                Select Student
+              </option>
+            </select>
+
+
+            <input
+              id="attendanceSubject"
+              type="text"
+              placeholder="Subject"
+              required
+              style="
+                padding:12px;
+                border:1px solid #cbd5e1;
+                border-radius:10px;
+              "
+            >
+
+
+            <input
+              id="attendanceTotal"
+              type="number"
+              min="0"
+              placeholder="Total Classes"
+              required
+              style="
+                padding:12px;
+                border:1px solid #cbd5e1;
+                border-radius:10px;
+              "
+            >
+
+
+            <input
+              id="attendancePresent"
+              type="number"
+              min="0"
+              placeholder="Present Classes"
+              required
+              style="
+                padding:12px;
+                border:1px solid #cbd5e1;
+                border-radius:10px;
+              "
+            >
+
+
+            <input
+              id="attendanceDate"
+              type="date"
+              style="
+                padding:12px;
+                border:1px solid #cbd5e1;
+                border-radius:10px;
+              "
+            >
+
+          </div>
+
+
+          <button
+            type="submit"
+            class="main-btn"
+            style="margin-top:12px;"
+          >
+            ➕ Save Attendance
+          </button>
+
+        </form>
+
+      `;
+
+      box.insertBefore(
+        adminPanel,
+        box.querySelector(".table-wrap")
+      );
+
+
+      $("firebaseAttendanceForm")
+        .addEventListener(
+          "submit",
+          addAttendance
+        );
+
+    }
+
+
+    updateAttendanceStudentList();
+
+
+    /*
+      Existing sample attendance table ko
+      replace karke Firebase table banayenge.
+    */
+
+    let tableWrap =
+      box.querySelector(
+        "#firebaseAttendanceTableWrap"
+      );
+
+
+    if (!tableWrap) {
+
+      tableWrap =
+        document.createElement("div");
+
+      tableWrap.id =
+        "firebaseAttendanceTableWrap";
+
+      tableWrap.className =
+        "table-wrap";
+
+      box.appendChild(tableWrap);
+
+    }
+
+
+    if (
+      attendanceRecords.length === 0
+    ) {
+
+      tableWrap.innerHTML = `
+        <p>
+          No attendance records added yet.
+        </p>
+      `;
+
+      return;
+    }
+
+
+    let html = `
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>Student</th>
+            <th>Subject</th>
+            <th>Total</th>
+            <th>Present</th>
+            <th>Attendance</th>
+            <th>Date</th>
+            ${
+              isAdmin()
+                ? "<th>Action</th>"
+                : ""
+            }
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+    `;
+
+
+    attendanceRecords.forEach(function (record) {
+
+      const total =
+        numberValue(record.total);
+
+      const present =
+        numberValue(record.present);
+
+      const percent =
+        total > 0
+          ? Math.round(
+              (present / total) * 100
+            )
+          : 0;
+
+
+      html += `
+
+        <tr>
+
+          <td>
+            <b>
+              ${safe(record.studentName || record.studentId || "-")}
+            </b>
+          </td>
+
+          <td>
+            ${safe(record.subject || "-")}
+          </td>
+
+          <td>
+            ${total}
+          </td>
+
+          <td>
+            ${present}
+          </td>
+
+          <td>
+            <span class="badge ${
+              percent >= 75
+                ? "pass"
+                : "fail"
+            }">
+              ${percent}%
+            </span>
+          </td>
+
+          <td>
+            ${safe(formatDate(record.date))}
+          </td>
+
+          ${
+            isAdmin()
+              ? `
+                <td>
+                  <button
+                    class="delete-btn"
+                    data-attendance-delete="${safe(record.firebaseId)}"
+                  >
+                    Delete
+                  </button>
+                </td>
+              `
+              : ""
+          }
+
+        </tr>
+
+      `;
+
+    });
+
+
+    html += `
+        </tbody>
+      </table>
+    `;
+
+
+    tableWrap.innerHTML =
+      html;
+
+
+    tableWrap
+      .querySelectorAll(
+        "[data-attendance-delete]"
+      )
+      .forEach(function (button) {
+
+        button.addEventListener(
+          "click",
+          async function () {
+
+            if (!adminOnly()) return;
+
+            if (
+              !confirm(
+                "Delete this attendance record?"
+              )
+            ) {
+              return;
+            }
+
+            try {
+
+              await db
+                .collection("attendance")
+                .doc(
+                  button.dataset
+                    .attendanceDelete
+                )
+                .delete();
+
+
+              await loadAttendance();
+
+              alert(
+                "Attendance deleted."
+              );
+
+            } catch (error) {
+
+              alert(
+                "Delete failed.\n\n" +
+                error.message
+              );
+
+            }
+
+          }
+        );
+
+      });
+
+  }
+
+
+  function updateAttendanceStudentList() {
+
+    const select =
+      $("attendanceStudent");
+
+    if (!select) return;
+
+
+    const oldValue =
+      select.value;
+
+
+    select.innerHTML = `
+      <option value="">
+        Select Student
+      </option>
+    `;
+
+
+    students.forEach(function (student) {
+
+      const option =
+        document.createElement("option");
+
+      option.value =
+        student.firebaseId;
+
+      option.textContent =
+        student.name +
+        " (" +
+        student.id +
+        ")";
+
+      option.dataset.name =
+        student.name;
+
+      option.dataset.studentId =
+        student.id;
+
+      select.appendChild(option);
+
+    });
+
+
+    select.value =
+      oldValue;
+
+  }
+
+
+  async function addAttendance(event) {
+
+    event.preventDefault();
+
+    if (!adminOnly()) return;
+
+
+    const select =
+      $("attendanceStudent");
+
+    const selected =
+      select.options[
+        select.selectedIndex
+      ];
+
+
+    if (!selected || !selected.value) {
+
+      alert(
+        "Please select a student."
+      );
+
+      return;
+    }
+
+
+    const subject =
+      $("attendanceSubject")
+        .value
+        .trim();
+
+
+    const total =
+      numberValue(
+        $("attendanceTotal").value
+      );
+
+
+    const present =
+      numberValue(
+        $("attendancePresent").value
+      );
+
+
+    const date =
+      $("attendanceDate").value;
+
+
+    if (!subject || total <= 0) {
+
+      alert(
+        "Enter valid subject and total classes."
+      );
+
+      return;
+    }
+
+
+    if (present > total) {
+
+      alert(
+        "Present classes cannot be greater than total classes."
+      );
+
+      return;
+    }
+
+
+    const student =
+      students.find(function (item) {
+
+        return item.firebaseId ===
+          selected.value;
+
+      });
+
+
+    try {
+
+      await db
+        .collection("attendance")
+        .add({
+
+          studentId:
+            student
+              ? student.id
+              : selected.dataset.studentId,
+
+          studentName:
+            student
+              ? student.name
+              : selected.dataset.name,
+
+          subject: subject,
+
+          total: total,
+
+          present: present,
+
+          date: date || "",
+
+          createdBy:
+            auth.currentUser
+              ? auth.currentUser.uid
+              : null,
+
+          createdAt:
+            firebase.firestore.FieldValue
+              .serverTimestamp()
+
+        });
+
+
+      $("firebaseAttendanceForm")
+        .reset();
+
+
+      alert(
+        "Attendance saved successfully! 🎉"
+      );
+
+
+      await loadAttendance();
+
+    } catch (error) {
+
+      console.error(
+        "Attendance save error:",
+        error
+      );
+
+      alert(
+        "Attendance Firebase me save nahi hua.\n\n" +
+        error.message
+      );
+
+    }
+
+  }
+
+
+  /* =========================================================
+     FEES
+     ========================================================= */
+
+  let feeRecords = [];
+
+
+  async function loadFees() {
+
+    try {
+
+      const snapshot =
+        await db
+          .collection("fees")
+          .get();
+
+
+      feeRecords =
+        snapshot.docs.map(function (doc) {
+
+          return {
+            firebaseId: doc.id,
+            ...doc.data()
+          };
+
+        });
+
+
+      renderFees();
+
+    } catch (error) {
+
+      console.error(
+        "Fees load error:",
+        error
+      );
+
+    }
+
+  }
+
+
+  function renderFees() {
+
+    const section =
+      $("fees");
+
+    if (!section) return;
+
+
+    const box =
+      section.querySelector(".box");
+
+    if (!box) return;
+
+
+    let adminPanel =
+      $("firebaseFeesAdmin");
+
+
+    if (!adminPanel && isAdmin()) {
+
+      adminPanel =
+        document.createElement("div");
+
+      adminPanel.id =
+        "firebaseFeesAdmin";
+
+      adminPanel.style.cssText = `
+        background:#f8fafc;
+        border:1px solid #e2e8f0;
+        border-radius:18px;
+        padding:20px;
+        margin-bottom:20px;
+      `;
+
+      adminPanel.innerHTML = `
+
+        <h3 style="margin-top:0;">
+          💰 Add Fee Record
+        </h3>
+
+        <form id="firebaseFeesForm">
+
+          <div style="
+            display:grid;
+            grid-template-columns:
+            repeat(auto-fit,minmax(180px,1fr));
+            gap:12px;
+          ">
+
+            <select
+              id="feeStudent"
+              required
+              style="
+                padding:12px;
+                border:1px solid #cbd5e1;
+                border-radius:10px;
+              "
+            >
+              <option value="">
+                Select Student
+              </option>
+            </select>
+
+
+            <input
+              id="feeTotal"
+              type="number"
+              min="0"
+              placeholder="Total Fees"
+              required
+              style="
+                padding:12px;
+                border:1px solid #cbd5e1;
+                border-radius:10px;
+              "
+            >
+
+
+            <input
+              id="feePaid"
+              type="number"
+              min="0"
+              placeholder="Paid Amount"
+              required
+              style="
+                padding:12px;
+                border:1px solid #cbd5e1;
+                border-radius:10px;
+              "
+            >
+
+
+            <input
+              id="feeNextPayment"
+              type="date"
+              style="
+                padding:12px;
+                border:1px solid #cbd5e1;
+                border-radius:10px;
+              "
+            >
+
+          </div>
+
+
+          <button
+            type="submit"
+            class="main-btn"
+            style="margin-top:12px;"
+          >
+            💾 Save Fees
+          </button>
+
+        </form>
+
+      `;
+
+
+      box.insertBefore(
+        adminPanel,
+        box.querySelector(".fee-grid") ||
+        box.firstChild
+      );
+
+
+      $("firebaseFeesForm")
+        .addEventListener(
+          "submit",
+          addFee
+        );
+
+    }
+
+
+    updateFeeStudentList();
+
+
+    let tableWrap =
+      $("firebaseFeesTableWrap");
+
+
+    if (!tableWrap) {
+
+      tableWrap =
+        document.createElement("div");
+
+      tableWrap.id =
+        "firebaseFeesTableWrap";
+
+      tableWrap.className =
+        "table-wrap";
+
+      box.appendChild(tableWrap);
+
+    }
+
+
+    if (feeRecords.length === 0) {
+
+      tableWrap.innerHTML = `
+        <p>
+          No fee records added yet.
+        </p>
+      `;
+
+      return;
+    }
+
+
+    let html = `
+
+      <h3>
+        💳 Student Fee Records
+      </h3>
+
+      <table>
+
+        <thead>
+
+          <tr>
+            <th>Student</th>
+            <th>Total Fees</th>
+            <th>Paid</th>
+            <th>Due</th>
+            <th>Next Payment</th>
+            ${
+              isAdmin()
+                ? "<th>Action</th>"
+                : ""
+            }
+          </tr>
+
+        </thead>
+
+        <tbody>
+
+    `;
+
+
+    feeRecords.forEach(function (fee) {
+
+      const total =
+        numberValue(fee.total);
+
+      const paid =
+        numberValue(fee.paid);
+
+      const due =
+        Math.max(
+          0,
+          total - paid
+        );
+
+
+      html += `
+
+        <tr>
+
+          <td>
+            <b>
+              ${safe(fee.studentName || "-")}
+            </b>
+            <br>
+            <small>
+              ${safe(fee.studentId || "")}
+            </small>
+          </td>
+
+          <td>
+            ₹${total.toLocaleString("en-IN")}
+          </td>
+
+          <td>
+            ₹${paid.toLocaleString("en-IN")}
+          </td>
+
+          <td>
+            <span class="badge ${
+              due === 0
+                ? "pass"
+                : "fail"
+            }">
+              ₹${due.toLocaleString("en-IN")}
+            </span>
+          </td>
+
+          <td>
+            ${safe(formatDate(fee.nextPayment))}
+          </td>
+
+          ${
+            isAdmin()
+              ? `
+                <td>
+                  <button
+                    class="delete-btn"
+                    data-fee-delete="${safe(fee.firebaseId)}"
+                  >
+                    Delete
+                  </button>
+                </td>
+              `
+              : ""
+          }
+
+        </tr>
+
+      `;
+
+    });
+
+
+    html += `
+        </tbody>
+      </table>
+    `;
+
+
+    tableWrap.innerHTML =
+      html;
+
+
+    tableWrap
+      .querySelectorAll(
+        "[data-fee-delete]"
+      )
+      .forEach(function (button) {
+
+        button.addEventListener(
+          "click",
+          async function () {
+
+            if (!adminOnly()) return;
+
+            if (
+              !confirm(
+                "Delete this fee record?"
+              )
+            ) {
+              return;
+            }
+
+
+            try {
+
+              await db
+                .collection("fees")
+                .doc(
+                  button.dataset.feeDelete
+                )
+                .delete();
+
+
+              await loadFees();
+
+
+              alert(
+                "Fee record deleted."
+              );
+
+            } catch (error) {
+
+              alert(
+                "Delete failed.\n\n" +
+                error.message
+              );
+
+            }
+
+          }
+        );
+
+      });
+
+  }
+
+
+  function updateFeeStudentList() {
+
+    const select =
+      $("feeStudent");
+
+    if (!select) return;
+
+
+    const oldValue =
+      select.value;
+
+
+    select.innerHTML = `
+      <option value="">
+        Select Student
+      </option>
+    `;
+
+
+    students.forEach(function (student) {
+
+      const option =
+        document.createElement("option");
+
+      option.value =
+        student.firebaseId;
+
+      option.textContent =
+        student.name +
+        " (" +
+        student.id +
+        ")";
+
+      select.appendChild(option);
+
+    });
+
+
+    select.value =
+      oldValue;
+
+  }
+
+
+  async function addFee(event) {
+
+    event.preventDefault();
+
+    if (!adminOnly()) return;
+
+
+    const select =
+      $("feeStudent");
+
+    const selected =
+      select.options[
+        select.selectedIndex
+      ];
+
+
+    if (!selected || !selected.value) {
+
+      alert(
+        "Please select a student."
+      );
+
+      return;
+    }
+
+
+    const total =
+      numberValue(
+        $("feeTotal").value
+      );
+
+
+    const paid =
+      numberValue(
+        $("feePaid").value
+      );
+
+
+    const nextPayment =
+      $("feeNextPayment").value;
+
+
+    if (total < 0 || paid < 0) {
+
+      alert(
+        "Fee amount cannot be negative."
+      );
+
+      return;
+    }
+
+
+    if (paid > total) {
+
+      alert(
+        "Paid amount cannot be greater than total fees."
+      );
+
+      return;
+    }
+
+
+    const student =
+      students.find(function (item) {
+
+        return item.firebaseId ===
+          selected.value;
+
+      });
+
+
+    try {
+
+      await db
+        .collection("fees")
+        .add({
+
+          studentId:
+            student
+              ? student.id
+              : "",
+
+          studentName:
+            student
+              ? student.name
+              : selected.textContent,
+
+          total: total,
+
+          paid: paid,
+
+          due:
+            Math.max(
+              0,
+              total - paid
+            ),
+
+          nextPayment:
+            nextPayment || "",
+
+          createdBy:
+            auth.currentUser
+              ? auth.currentUser.uid
+              : null,
+
+          createdAt:
+            firebase.firestore.FieldValue
+              .serverTimestamp()
+
+        });
+
+
+      $("firebaseFeesForm")
+        .reset();
+
+
+      alert(
+        "Fees saved successfully! 🎉"
+      );
+
+
+      await loadFees();
+
+    } catch (error) {
+
+      console.error(
+        "Fee save error:",
+        error
+      );
+
+      alert(
+        "Fees Firebase me save nahi hua.\n\n" +
+        error.message
+      );
+
+    }
+
+  }
+
+
+  /* =========================================================
+     NOTICES
+     ========================================================= */
+
+  let firebaseNotices = [];
+
+
+  async function loadNotices() {
+
+    try {
+
+      const snapshot =
+        await db
+          .collection("notices")
+          .get();
+
+
+      firebaseNotices =
+        snapshot.docs.map(function (doc) {
+
+          return {
+            firebaseId: doc.id,
+            ...doc.data()
+          };
+
+        });
+
+
+      renderFirebaseNotices();
+
+    } catch (error) {
+
+      console.error(
+        "Notices load error:",
+        error
+      );
+
+    }
+
+  }
+
+
+  function renderFirebaseNotices() {
+
+    const section =
+      $("notices");
+
+    if (!section) return;
+
+
+    const box =
+      section.querySelector(".box");
+
+    if (!box) return;
+
+
+    let adminPanel =
+      $("firebaseNoticesAdmin");
+
+
+    if (!adminPanel && isAdmin()) {
+
+      adminPanel =
+        document.createElement("div");
+
+      adminPanel.id =
+        "firebaseNoticesAdmin";
+
+      adminPanel.style.cssText = `
+        background:#f8fafc;
+        border:1px solid #e2e8f0;
+        border-radius:18px;
+        padding:20px;
+        margin-bottom:20px;
+      `;
+
+      adminPanel.innerHTML = `
+
+        <h3 style="margin-top:0;">
+          📢 Add New Notice
+        </h3>
+
+        <form id="firebaseNoticeForm">
+
+          <input
+            id="noticeTitle"
+            type="text"
+            placeholder="Notice Title"
+            required
+            style="
+              width:100%;
+              box-sizing:border-box;
+              padding:12px;
+              border:1px solid #cbd5e1;
+              border-radius:10px;
+              margin-bottom:12px;
+            "
+          >
+
+
+          <textarea
+            id="noticeText"
+            placeholder="Write notice..."
+            required
+            rows="4"
+            style="
+              width:100%;
+              box-sizing:border-box;
+              padding:12px;
+              border:1px solid #cbd5e1;
+              border-radius:10px;
+              resize:vertical;
+            "
+          ></textarea>
+
+
+          <button
+            type="submit"
+            class="main-btn"
+            style="margin-top:12px;"
+          >
+            📢 Publish Notice
+          </button>
+
+        </form>
+
+      `;
+
+
+      box.insertBefore(
+        adminPanel,
+        box.querySelector(".notice-list") ||
+        box.firstChild
+      );
+
+
+      $("firebaseNoticeForm")
+        .addEventListener(
+          "submit",
+          addNotice
+        );
+
+    }
+
+
+    let list =
+      $("firebaseNoticeList");
+
+
+    if (!list) {
+
+      list =
+        document.createElement("div");
+
+      list.id =
+        "firebaseNoticeList";
+
+      list.className =
+        "notice-list";
+
+      box.appendChild(list);
+
+    }
+
+
+    list.innerHTML = "";
+
+
+    if (firebaseNotices.length === 0) {
+
+      list.innerHTML = `
+        <div class="notice-card">
+          <div class="notice-icon">📢</div>
+          <div>
+            <b>No notices available.</b>
+            <p>New notices will appear here.</p>
+          </div>
+        </div>
+      `;
+
+      return;
+    }
+
+
+    firebaseNotices
+      .sort(function (a, b) {
+
+        const da =
+          a.createdAt &&
+          a.createdAt.toDate
+            ? a.createdAt.toDate()
+            : new Date(0);
+
+        const dbb =
+          b.createdAt &&
+          b.createdAt.toDate
+            ? b.createdAt.toDate()
+            : new Date(0);
+
+        return dbb - da;
+
+      });
+
+
+    firebaseNotices.forEach(function (notice) {
+
+      const article =
+        document.createElement("article");
+
+      article.className =
+        "notice-card";
+
+
+      article.innerHTML = `
+
+        <div class="notice-icon">
+          📢
+        </div>
+
+        <div style="flex:1;">
+
+          <span class="notice-date">
+            ${safe(formatDate(notice.createdAt))}
+          </span>
+
+          <h3>
+            ${safe(notice.title)}
+          </h3>
+
+          <p>
+            ${safe(notice.text)}
+          </p>
+
+          ${
+            isAdmin()
+              ? `
+                <button
+                  class="delete-btn"
+                  data-notice-delete="${safe(notice.firebaseId)}"
+                >
+                  Delete
+                </button>
+              `
+              : ""
+          }
+
+        </div>
+
+      `;
+
+
+      list.appendChild(article);
+
+    });
+
+
+    list
+      .querySelectorAll(
+        "[data-notice-delete]"
+      )
+      .forEach(function (button) {
+
+        button.addEventListener(
+          "click",
+          async function () {
+
+            if (!adminOnly()) return;
+
+
+            if (
+              !confirm(
+                "Delete this notice?"
+              )
+            ) {
+              return;
+            }
+
+
+            try {
+
+              await db
+                .collection("notices")
+                .doc(
+                  button.dataset
+                    .noticeDelete
+                )
+                .delete();
+
+
+              await loadNotices();
+
+
+              alert(
+                "Notice deleted."
+              );
+
+            } catch (error) {
+
+              alert(
+                "Delete failed.\n\n" +
+                error.message
+              );
+
+            }
+
+          }
+        );
+
+      });
+
+  }
+
+
+  async function addNotice(event) {
+
+    event.preventDefault();
+
+    if (!adminOnly()) return;
+
+
+    const title =
+      $("noticeTitle")
+        .value
+        .trim();
+
+
+    const text =
+      $("noticeText")
+        .value
+        .trim();
+
+
+    if (!title || !text) {
+
+      alert(
+        "Enter notice title and notice text."
+      );
+
+      return;
+    }
+
+
+    try {
+
+      await db
+        .collection("notices")
+        .add({
+
+          title: title,
+
+          text: text,
+
+          createdBy:
+            auth.currentUser
+              ? auth.currentUser.uid
+              : null,
+
+          createdAt:
+            firebase.firestore.FieldValue
+              .serverTimestamp()
+
+        });
+
+
+      $("firebaseNoticeForm")
+        .reset();
+
+
+      alert(
+        "Notice published successfully! 🎉"
+      );
+
+
+      await loadNotices();
+
+    } catch (error) {
+
+      console.error(
+        "Notice save error:",
+        error
+      );
+
+      alert(
+        "Notice Firebase me save nahi hua.\n\n" +
+        error.message
+      );
+
+    }
+
+  }
+
+
+  /* =========================================================
+     PAGE NAVIGATION HOOK
+     ========================================================= */
+
+  const originalOpenPage =
+    window.openPage;
+
+
+  window.openPage =
+    function (page) {
+
+      /*
+        Run existing navigation first.
+        This keeps your original StudentHub working.
+      */
+
+      originalOpenPage(page);
+
+
+      if (page === "courses") {
+        loadFirebaseCourses();
+      }
+
+
+      if (page === "attendance") {
+        loadAttendance();
+      }
+
+
+      if (page === "fees") {
+        loadFees();
+      }
+
+
+      if (page === "notices") {
+        loadNotices();
+      }
+
+    };
+
+
+  /* =========================================================
+     WHEN STUDENTS LOAD
+     ========================================================= */
+
+  const originalLoadStudents =
+    window.loadStudents;
+
+
+  window.loadStudents =
+    async function () {
+
+      await originalLoadStudents();
+
+      updateStudentCourseDropdown();
+      updateAttendanceStudentList();
+      updateFeeStudentList();
+
+    };
+
+
+  /* =========================================================
+     ROLE CHANGE / LOGIN
+     ========================================================= */
+
+  function refreshManagementPages() {
+
+    if ($("courses") &&
+        $("courses").classList.contains("active")) {
+
+      loadFirebaseCourses();
+
+    }
+
+
+    if ($("attendance") &&
+        $("attendance").classList.contains("active")) {
+
+      loadAttendance();
+
+    }
+
+
+    if ($("fees") &&
+        $("fees").classList.contains("active")) {
+
+      loadFees();
+
+    }
+
+
+    if ($("notices") &&
+        $("notices").classList.contains("active")) {
+
+      loadNotices();
+
+    }
+
+  }
+
+
+  /* =========================================================
+     INITIAL LOAD
+     ========================================================= */
+
+  setTimeout(function () {
+
+    updateStudentCourseDropdown();
+
+    updateAttendanceStudentList();
+
+    updateFeeStudentList();
+
+    if ($("courseGrid")) {
+      loadFirebaseCourses();
+    }
+
+  }, 1000);
+
+
+})();
