@@ -210,22 +210,12 @@ function togglePassword() {
    ========================================================= */
 
 async function forgotPassword(event) {
-
   event.preventDefault();
 
-  const email =
-    $("resetEmail").value
-      .trim()
-      .toLowerCase();
+  const email = $("resetEmail").value.trim().toLowerCase();
 
   if (!email) {
-
-    showMessage(
-      "forgotMessage",
-      "Please enter your email.",
-      "error"
-    );
-
+    showMessage("forgotMessage", "Please enter your email.", "error");
     return;
   }
 
@@ -236,8 +226,15 @@ async function forgotPassword(event) {
   );
 
   try {
+    const actionCodeSettings = {
+      url: "https://saif4ev3r-beep.github.io/clg-management/",
+      handleCodeInApp: false
+    };
 
-    await auth.sendPasswordResetEmail(email);
+    await auth.sendPasswordResetEmail(
+      email,
+      actionCodeSettings
+    );
 
     showMessage(
       "forgotMessage",
@@ -246,47 +243,18 @@ async function forgotPassword(event) {
     );
 
   } catch (error) {
+    console.error("Password reset error:", error);
 
-    console.error(
-      "Password reset error:",
-      error
-    );
+    let message = "Could not send reset link.";
 
-    let message =
-      "Could not send reset link.";
-
-    if (
-      error.code ===
-      "auth/user-not-found"
-    ) {
-
-      message =
-        "No account found with this email.";
-
-    } else if (
-      error.code ===
-      "auth/invalid-email"
-    ) {
-
-      message =
-        "Please enter a valid email.";
-
-    } else if (
-      error.code ===
-      "auth/too-many-requests"
-    ) {
-
-      message =
-        "Too many attempts. Please try again later.";
-
-    } else if (
-      error.code ===
-      "auth/unauthorized-continue-uri"
-    ) {
-
-      message =
-        "Password reset domain is not authorized in Firebase.";
-
+    if (error.code === "auth/user-not-found") {
+      message = "No account found with this email.";
+    } else if (error.code === "auth/invalid-email") {
+      message = "Please enter a valid email.";
+    } else if (error.code === "auth/too-many-requests") {
+      message = "Too many attempts. Please try again later.";
+    } else if (error.code === "auth/unauthorized-continue-uri") {
+      message = "Password reset domain is not authorized in Firebase.";
     }
 
     showMessage(
