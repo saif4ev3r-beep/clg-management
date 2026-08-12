@@ -1074,31 +1074,33 @@ function renderStudents() {
       : "";
 
 
-  const list =
+const filter =
+    sessionStorage.getItem("studenthub_filter") || "";
+
+const list =
     students.filter(function (student) {
 
-      const text = [
+        const text = [
+            student.name,
+            student.id,
+            student.email,
+            student.phone,
+            student.course,
+            student.result
+        ]
+            .join(" ")
+            .toLowerCase();
 
-        student.name,
+        const searchMatch =
+            text.includes(search);
 
-        student.id,
+        const resultMatch =
+            !filter ||
+            String(student.result).toLowerCase() ===
+            filter.toLowerCase();
 
-        student.email,
-
-        student.phone,
-
-        student.course,
-
-        student.result
-
-      ]
-        .join(" ")
-        .toLowerCase();
-
-
-      return text.includes(search);
+        return searchMatch && resultMatch;
     });
-
 
   table.innerHTML = "";
 
