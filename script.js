@@ -1981,11 +1981,3 @@ function startApp() {
 
 startApp();
 
-const firebaseConfig = {
-  apiKey: "AIzaSyD5KEHL9H9jR8rzoUc9CLndpmrEQcuw23w",
-  authDomain: "lg-management-ed8a2.firebaseapp.com",
-  projectId: "lg-management-ed8a2",
-  storageBucket: "lg-management-ed8a2.firebasestorage.app",
-  messagingSenderId: "774955654860",
-  appId: "1:774955654860:web:dcf07c5d5a19c0e3a4b7c1"
-};
